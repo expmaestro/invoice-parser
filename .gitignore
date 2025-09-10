@@ -1,0 +1,96 @@
+############################
+# .NET / C# (Visual Studio)
+############################
+## Build results
+[Bb]in/
+[Oo]bj/
+*.dll
+*.exe
+*.app
+*.log
+
+## VS related
+.vs/
+*.user
+*.suo
+*.cache
+*.dbmdl
+
+## Rider / JetBrains
+.idea/
+
+## ASP.NET Secrets
+secrets.json
+
+## Configuration files
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Local.json
+appsettings.*.json
+appsettings.json
+
+
+############################
+# Frontend (Angular/React/Vue)
+############################
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+dist/
+build/
+.tmp/
+.cache/
+
+# Angular
+.angular/
+.angular-cache/
+
+# React / Vite / Vue
+.vite/
+vite.config.*
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# Logs
+logs
+*.log
+
+############################
+# OS / Editor files
+############################
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.swp
+*.bak
+*.tmp
+*.orig
+
+############################
+# Git
+############################
+*.orig
+*.rej
+*.patch
+
+############################
+# Coverage / Testing
+############################
+coverage/
+lcov-report/
+test-output/
+
+############################
+# Other
+############################
+*.ncrunch*
+_ReSharper*/
+*.nupkg
+*.snk
+*.pdb
+*.Publish.xml
