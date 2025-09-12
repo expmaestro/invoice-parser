@@ -1,16 +1,27 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { InvoiceService } from '../services/invoice.service';
 import { ParsedInvoice, CurrencyField } from '../models/invoice.model';
 
 @Component({
   selector: 'app-invoice-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <div class="container">
       <div class="upload-section">
         <h2>Upload Invoice</h2>
+        <div class="parser-selection">
+          <label>
+            <input type="radio" name="parser" [value]="'azure'" [(ngModel)]="selectedParser">
+            Azure Document Intelligence
+          </label>
+          <label>
+            <input type="radio" name="parser" [value]="'gemini'" [(ngModel)]="selectedParser">
+            Google Gemini
+          </label>
+        </div>
         <input type="file" 
                accept="image/*" 
                (change)="onFileSelected($event)"
@@ -18,7 +29,7 @@ import { ParsedInvoice, CurrencyField } from '../models/invoice.model';
                (dragover)="onDragOver($event)"
                (dragleave)="isDragging = false"
                (drop)="onDrop($event)">
-        <div *ngIf="isLoading" class="loading">Processing...</div>
+        <div *ngIf="isLoading" class="loading">Processing with {{selectedParser}}...</div>
       </div>
 
       <div class="content-wrapper" *ngIf="imagePreviewUrl || parsedInvoice">
@@ -45,6 +56,43 @@ import { ParsedInvoice, CurrencyField } from '../models/invoice.model';
               ({{(parsedInvoice.customerNameConfidence * 100).toFixed(1)}}% confidence)
             </small>
           </p>
+
+          <div *ngIf="parsedInvoice.shipper" class="shipping-info">
+            <h4>Shipper Information</h4>
+            <p>
+              <strong>Name:</strong> {{parsedInvoice.shipper.name}}
+              <small *ngIf="parsedInvoice.shipper.nameConfidence" class="confidence">
+                ({{(parsedInvoice.shipper.nameConfidence * 100).toFixed(1)}}% confidence)
+              </small>
+            </p>
+            <div *ngIf="parsedInvoice.shipper.address" class="address">
+              <p>{{parsedInvoice.shipper.address.street}}</p>
+              <p>{{parsedInvoice.shipper.address.city}}, {{parsedInvoice.shipper.address.state}}</p>
+              <p>{{parsedInvoice.shipper.address.country}} {{parsedInvoice.shipper.address.postalCode}}</p>
+              <small *ngIf="parsedInvoice.shipper.addressConfidence" class="confidence">
+                ({{(parsedInvoice.shipper.addressConfidence * 100).toFixed(1)}}% confidence)
+              </small>
+            </div>
+          </div>
+
+          <div *ngIf="parsedInvoice.consignee" class="shipping-info">
+            <h4>Consignee Information</h4>
+            <p>
+              <strong>Name:</strong> {{parsedInvoice.consignee.name}}
+              <small *ngIf="parsedInvoice.consignee.nameConfidence" class="confidence">
+                ({{(parsedInvoice.consignee.nameConfidence * 100).toFixed(1)}}% confidence)
+              </small>
+            </p>
+            <div *ngIf="parsedInvoice.consignee.address" class="address">
+              <p>{{parsedInvoice.consignee.address.street}}</p>
+              <p>{{parsedInvoice.consignee.address.city}}, {{parsedInvoice.consignee.address.state}}</p>
+              <p>{{parsedInvoice.consignee.address.country}} {{parsedInvoice.consignee.address.postalCode}}</p>
+              <small *ngIf="parsedInvoice.consignee.addressConfidence" class="confidence">
+                ({{(parsedInvoice.consignee.addressConfidence * 100).toFixed(1)}}% confidence)
+              </small>
+            </div>
+          </div>
+
           <p *ngIf="parsedInvoice.subTotal">
             <strong>Subtotal:</strong> 
             {{formatCurrency(parsedInvoice.subTotal)}}
@@ -104,6 +152,29 @@ import { ParsedInvoice, CurrencyField } from '../models/invoice.model';
       text-align: center;
       margin-bottom: 20px;
       border-radius: 4px;
+    }
+
+    .parser-selection {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .parser-selection label {
+      cursor: pointer;
+      padding: 10px 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+    }
+
+    .parser-selection label:hover {
+      background-color: #f0f0f0;
+    }
+
+    .parser-selection input[type="radio"] {
+      margin-right: 8px;
     }
 
     input[type="file"] {
@@ -186,6 +257,30 @@ import { ParsedInvoice, CurrencyField } from '../models/invoice.model';
       font-style: italic;
       margin-left: 5px;
     }
+
+    .shipping-info {
+      background-color: #f8f9fa;
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 4px;
+      border: 1px solid #e9ecef;
+    }
+
+    .shipping-info h4 {
+      color: #495057;
+      margin-bottom: 10px;
+    }
+
+    .shipping-info .address {
+      margin-left: 15px;
+      padding-left: 10px;
+      border-left: 3px solid #e9ecef;
+    }
+
+    .shipping-info .address p {
+      margin: 5px 0;
+      color: #6c757d;
+    }
   `]
 })
 export class InvoiceUploadComponent {
@@ -193,6 +288,7 @@ export class InvoiceUploadComponent {
   isLoading = false;
   parsedInvoice: ParsedInvoice | null = null;
   imagePreviewUrl: string | null = null;
+  selectedParser: 'azure' | 'gemini' = 'azure';
 
   constructor(private invoiceService: InvoiceService) {}
 
@@ -239,7 +335,7 @@ export class InvoiceUploadComponent {
     reader.readAsDataURL(file);
 
     this.isLoading = true;
-    this.invoiceService.parseInvoice(file).subscribe({
+    this.invoiceService.parseInvoice(file, this.selectedParser).subscribe({
       next: (result) => {
         this.parsedInvoice = result;
         this.isLoading = false;

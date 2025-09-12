@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-// import { ParsedInvoice } from '../models/invoice.model';
+import { ParsedInvoice } from '../models/invoice.model';
 
 @Injectable({
   providedIn: 'root'
@@ -11,9 +11,9 @@ export class InvoiceService {
 
   constructor(private http: HttpClient) { }
 
-  parseInvoice(file: File): Observable<any> {
+  parseInvoice(file: File, parser: 'azure' | 'gemini' = 'azure'): Observable<ParsedInvoice> {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<any>(`${this.apiUrl}/parse`, formData);
+    return this.http.post<ParsedInvoice>(`${this.apiUrl}/parse?parser=${parser}`, formData);
   }
 }

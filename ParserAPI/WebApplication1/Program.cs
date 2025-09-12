@@ -14,7 +14,15 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+// Register HTTP client
+builder.Services.AddHttpClient("Gemini", client =>
+{
+    client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
+});
+
 builder.Services.AddScoped<IInvoiceParserService, InvoiceParserService>();
+builder.Services.AddScoped<IGeminiParserService, GeminiParserService>();
 
 var app = builder.Build();
 

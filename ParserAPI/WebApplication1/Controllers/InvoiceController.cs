@@ -8,15 +8,20 @@ namespace WebApplication1.Controllers
     [Route("api/[controller]")]
     public class InvoiceController : ControllerBase
     {
-        private readonly IInvoiceParserService _parserService;
+        private readonly IInvoiceParserService _azureParser;
+        private readonly IGeminiParserService _geminiParser;
 
-        public InvoiceController(IInvoiceParserService parserService)
+        public InvoiceController(
+            IInvoiceParserService azureParser, 
+            IGeminiParserService geminiParser
+            )
         {
-            _parserService = parserService;
+            _azureParser = azureParser;
+            _geminiParser = geminiParser;
         }
 
         [HttpPost("parse")]
-        public async Task<ActionResult> ParseInvoice(IFormFile file)
+        public async Task<ActionResult<ParsedInvoice>> ParseInvoice(IFormFile file, [FromQuery] string parser = "azure")
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
@@ -27,7 +32,12 @@ namespace WebApplication1.Controllers
             using var stream = file.OpenReadStream();
             try
             {
-                var result = await _parserService.ParseInvoiceImageAsync(stream);
+                var result = parser.ToLower() switch
+                {
+                    "gemini" => await _geminiParser.ParseInvoiceImageAsync(stream),
+                    "azure" => await _azureParser.ParseInvoiceImageAsync(stream),
+                    _ => throw new ArgumentException("Invalid parser specified. Use 'azure' or 'gemini'")
+                };
                 return Ok(result);
             }
             catch (Exception ex)
