@@ -34,6 +34,8 @@ namespace WebApplication1.Services
                 var imageBase64 = Convert.ToBase64String(ms.ToArray());
 
                 var prompt = @"Analyze this logistics invoice image and extract the following information:
+                    - Freight Bill Number (labeled as Freight Bill No., FR Bill No., etc.)
+                    - Bill of Lading Number (labeled as B/L No., BOL, Bill of Lading No., etc.)
                     - Vendor name
                     - Customer name
                     - Line items (description and amount)
@@ -44,6 +46,8 @@ namespace WebApplication1.Services
                     - Consignee information (name, address)
                     Format as JSON with this structure:
                     {
+                        ""freightBillNo"": ""string"",
+                        ""billOfLading"": ""string"",
                         ""vendorName"": ""string"",
                         ""customerName"": ""string"",
                         ""shipper"": {

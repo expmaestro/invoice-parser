@@ -19,6 +19,10 @@ namespace WebApplication1.Models
 
     public class ParsedInvoice
     {
+        public string? FreightBillNo { get; set; }
+        public double? FreightBillNoConfidence { get; set; }
+        public string? BillOfLading { get; set; }
+        public double? BillOfLadingConfidence { get; set; }
         public string? VendorName { get; set; }
         public double? VendorNameConfidence { get; set; }
         public string? CustomerName { get; set; }

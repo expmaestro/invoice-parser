@@ -42,6 +42,20 @@ import { ParsedInvoice, CurrencyField } from '../models/invoice.model';
         <div *ngIf="parsedInvoice" class="results-section">
           <h3>Parsed Invoice Details</h3>
         <div class="invoice-details">
+          <p *ngIf="parsedInvoice.freightBillNo">
+            <strong>Freight Bill No:</strong> 
+            {{parsedInvoice.freightBillNo}}
+            <small *ngIf="parsedInvoice.freightBillNoConfidence" class="confidence">
+              ({{(parsedInvoice.freightBillNoConfidence * 100).toFixed(1)}}% confidence)
+            </small>
+          </p>
+          <p *ngIf="parsedInvoice.billOfLading">
+            <strong>Bill of Lading No:</strong> 
+            {{parsedInvoice.billOfLading}}
+            <small *ngIf="parsedInvoice.billOfLadingConfidence" class="confidence">
+              ({{(parsedInvoice.billOfLadingConfidence * 100).toFixed(1)}}% confidence)
+            </small>
+          </p>
           <p *ngIf="parsedInvoice.vendorName">
             <strong>Vendor Name:</strong> 
             {{parsedInvoice.vendorName}}
@@ -288,7 +302,7 @@ export class InvoiceUploadComponent {
   isLoading = false;
   parsedInvoice: ParsedInvoice | null = null;
   imagePreviewUrl: string | null = null;
-  selectedParser: 'azure' | 'gemini' = 'azure';
+  selectedParser: 'azure' | 'gemini' = 'gemini';
 
   constructor(private invoiceService: InvoiceService) {}
 

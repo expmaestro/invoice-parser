@@ -14,6 +14,10 @@ export interface ShippingInfo {
 }
 
 export interface ParsedInvoice {
+    freightBillNo?: string;
+    freightBillNoConfidence?: number;
+    billOfLading?: string;
+    billOfLadingConfidence?: number;
     vendorName?: string;
     vendorNameConfidence?: number;
     customerName?: string;
