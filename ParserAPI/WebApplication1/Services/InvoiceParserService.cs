@@ -48,20 +48,67 @@ namespace WebApplication1.Services
                 // Create parsed invoice object
                 var parsedInvoice = new ParsedInvoice();
 
-                // Extract vendor name
+                // Extract basic invoice information
+                if (document.Fields.TryGetValue("InvoiceId", out DocumentField? invoiceIdField) &&
+                    invoiceIdField.FieldType == DocumentFieldType.String)
+                {
+                    parsedInvoice.FreightBillNo = invoiceIdField.ValueString;
+                }
+
+                if (document.Fields.TryGetValue("InvoiceDate", out DocumentField? invoiceDateField) &&
+                    invoiceDateField.FieldType == DocumentFieldType.Date)
+                {
+                    parsedInvoice.ShipmentDate = invoiceDateField.ValueDate?.ToString("yyyy-MM-dd");
+                }
+
+                if (document.Fields.TryGetValue("DueDate", out DocumentField? dueDateField) &&
+                    dueDateField.FieldType == DocumentFieldType.Date)
+                {
+                    parsedInvoice.PaymentDueDate = dueDateField.ValueDate?.ToString("yyyy-MM-dd");
+                }
+
+                // Extract vendor information (map to RemitTo)
                 if (document.Fields.TryGetValue("VendorName", out DocumentField? vendorNameField) &&
                     vendorNameField.FieldType == DocumentFieldType.String)
                 {
-                    parsedInvoice.VendorName = vendorNameField.ValueString;
-                    parsedInvoice.VendorNameConfidence = vendorNameField.Confidence;
+                    parsedInvoice.RemitTo = new CompanyContact
+                    {
+                        Name = vendorNameField.ValueString
+                    };
                 }
 
-                // Extract customer name
+                if (document.Fields.TryGetValue("VendorAddress", out DocumentField? vendorAddressField) &&
+                    vendorAddressField.FieldType == DocumentFieldType.String)
+                {
+                    if (parsedInvoice.RemitTo == null)
+                        parsedInvoice.RemitTo = new CompanyContact();
+                        
+                    parsedInvoice.RemitTo.Address = new Address
+                    {
+                        FullAddress = vendorAddressField.ValueString
+                    };
+                }
+
+                // Extract customer information (map to BillTo)
                 if (document.Fields.TryGetValue("CustomerName", out DocumentField? customerNameField) &&
                     customerNameField.FieldType == DocumentFieldType.String)
                 {
-                    parsedInvoice.CustomerName = customerNameField.ValueString;
-                    parsedInvoice.CustomerNameConfidence = customerNameField.Confidence;
+                    parsedInvoice.BillTo = new CompanyContact
+                    {
+                        Name = customerNameField.ValueString
+                    };
+                }
+
+                if (document.Fields.TryGetValue("CustomerAddress", out DocumentField? customerAddressField) &&
+                    customerAddressField.FieldType == DocumentFieldType.String)
+                {
+                    if (parsedInvoice.BillTo == null)
+                        parsedInvoice.BillTo = new CompanyContact();
+                        
+                    parsedInvoice.BillTo.Address = new Address
+                    {
+                        FullAddress = customerAddressField.ValueString
+                    };
                 }
 
                 // Extract items
@@ -72,24 +119,28 @@ namespace WebApplication1.Services
                     {
                         if (itemField.FieldType == DocumentFieldType.Dictionary)
                         {
-                            var item = new InvoiceItem();
+                            var item = new ShipmentItem();
                             var itemFields = itemField.ValueDictionary;
 
                             if (itemFields.TryGetValue("Description", out DocumentField? descriptionField) &&
                                 descriptionField.FieldType == DocumentFieldType.String)
                             {
                                 item.Description = descriptionField.ValueString;
-                                item.DescriptionConfidence = descriptionField.Confidence;
+                            }
+
+                            if (itemFields.TryGetValue("Quantity", out DocumentField? quantityField) &&
+                                quantityField.FieldType == DocumentFieldType.Double)
+                            {
+                                item.Pieces = (int?)quantityField.ValueDouble;
                             }
 
                             if (itemFields.TryGetValue("Amount", out DocumentField? amountField) &&
                                 amountField.FieldType == DocumentFieldType.Currency)
                             {
-                                item.Amount = new CurrencyField
+                                item.Charge = new CurrencyField
                                 {
-                                    Amount = amountField.ValueCurrency.Amount,
-                                    CurrencySymbol = amountField.ValueCurrency.CurrencySymbol,
-                                    Confidence = amountField.Confidence
+                                    Amount = (decimal)amountField.ValueCurrency.Amount,
+                                    CurrencySymbol = amountField.ValueCurrency.CurrencySymbol
                                 };
                             }
 
@@ -104,9 +155,8 @@ namespace WebApplication1.Services
                 {
                     parsedInvoice.SubTotal = new CurrencyField
                     {
-                        Amount = subTotalField.ValueCurrency.Amount,
-                        CurrencySymbol = subTotalField.ValueCurrency.CurrencySymbol,
-                        Confidence = subTotalField.Confidence
+                        Amount = (decimal)subTotalField.ValueCurrency.Amount,
+                        CurrencySymbol = subTotalField.ValueCurrency.CurrencySymbol
                     };
                 }
 
@@ -115,9 +165,8 @@ namespace WebApplication1.Services
                 {
                     parsedInvoice.TotalTax = new CurrencyField
                     {
-                        Amount = totalTaxField.ValueCurrency.Amount,
-                        CurrencySymbol = totalTaxField.ValueCurrency.CurrencySymbol,
-                        Confidence = totalTaxField.Confidence
+                        Amount = (decimal)totalTaxField.ValueCurrency.Amount,
+                        CurrencySymbol = totalTaxField.ValueCurrency.CurrencySymbol
                     };
                 }
 
@@ -126,9 +175,18 @@ namespace WebApplication1.Services
                 {
                     parsedInvoice.InvoiceTotal = new CurrencyField
                     {
-                        Amount = invoiceTotalField.ValueCurrency.Amount,
-                        CurrencySymbol = invoiceTotalField.ValueCurrency.CurrencySymbol,
-                        Confidence = invoiceTotalField.Confidence
+                        Amount = (decimal)invoiceTotalField.ValueCurrency.Amount,
+                        CurrencySymbol = invoiceTotalField.ValueCurrency.CurrencySymbol
+                    };
+                }
+
+                if (document.Fields.TryGetValue("AmountDue", out DocumentField? amountDueField) &&
+                    amountDueField.FieldType == DocumentFieldType.Currency)
+                {
+                    parsedInvoice.AmountDue = new CurrencyField
+                    {
+                        Amount = (decimal)amountDueField.ValueCurrency.Amount,
+                        CurrencySymbol = amountDueField.ValueCurrency.CurrencySymbol
                     };
                 }
 
@@ -138,11 +196,6 @@ namespace WebApplication1.Services
             {
                 throw new Exception($"Error processing invoice: {ex.Message}", ex);
             }
-            //    }
-            //}
-
-            return null;
-
         }
     }
 

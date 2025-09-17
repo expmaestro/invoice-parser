@@ -4,40 +4,76 @@ export interface Address {
     state?: string;
     country?: string;
     postalCode?: string;
+    fullAddress?: string;
+}
+
+export interface CompanyContact {
+    name?: string;
+    address?: Address;
+    phone?: string;
+    fax?: string;
+    email?: string;
+    website?: string;
+    accountNumber?: string;
 }
 
 export interface ShippingInfo {
+    accountNumber?: string;
     name?: string;
-    nameConfidence?: number;
     address?: Address;
-    addressConfidence?: number;
+    phone?: string;
+}
+
+export interface ShipmentDetails {
+    service?: string;
+    shipmentDate?: string;
+    poNumber?: string;
+    billOfLading?: string;
+    tariff?: string;
+    paymentTerms?: string;
+    totalPieces?: number;
+    totalWeight?: number;
+}
+
+export interface ShipmentItem {
+    pieces?: number;
+    description?: string;
+    weight?: number;
+    class?: string;
+    rate?: number;
+    charge?: CurrencyField;
 }
 
 export interface ParsedInvoice {
+    // Invoice Information
+    service?: string;
     freightBillNo?: string;
-    freightBillNoConfidence?: number;
-    billOfLading?: string;
-    billOfLadingConfidence?: number;
-    vendorName?: string;
-    vendorNameConfidence?: number;
-    customerName?: string;
-    customerNameConfidence?: number;
+    shipmentDate?: string;
+    amountDue?: CurrencyField;
+    paymentDueDate?: string;
+    fedTaxId?: string;
+
+    // Company Information
+    remitTo?: CompanyContact;
+    billTo?: CompanyContact;
+
+    // Shipping Information
     shipper?: ShippingInfo;
     consignee?: ShippingInfo;
-    items: InvoiceItem[];
+
+    // Shipment Details
+    shipmentDetails?: ShipmentDetails;
+
+    // Line Items
+    items: ShipmentItem[];
+
+    // Totals
     subTotal?: CurrencyField;
     totalTax?: CurrencyField;
     invoiceTotal?: CurrencyField;
 }
 
-export interface InvoiceItem {
-    description?: string;
-    descriptionConfidence?: number;
-    amount?: CurrencyField;
-}
-
 export interface CurrencyField {
     currencySymbol?: string;
     amount: number;
-    confidence?: number;
 }

@@ -33,53 +33,121 @@ namespace WebApplication1.Services
                 await imageStream.CopyToAsync(ms);
                 var imageBase64 = Convert.ToBase64String(ms.ToArray());
 
-                var prompt = @"Analyze this logistics invoice image and extract the following information:
-                    - Freight Bill Number (labeled as Freight Bill No., FR Bill No., etc.)
-                    - Bill of Lading Number (labeled as B/L No., BOL, Bill of Lading No., etc.)
-                    - Vendor name
-                    - Customer name
-                    - Line items (description and amount)
-                    - Subtotal
-                    - Tax amount
-                    - Total amount
-                    - Shipper information (name, address)
-                    - Consignee information (name, address)
-                    Format as JSON with this structure:
-                    {
-                        ""freightBillNo"": ""string"",
+                var prompt = @"Analyze this logistics invoice image and extract the following information as structured JSON:
+
+                INVOICE INFORMATION:
+                - Service
+                - Freight Bill No
+                - Shipment Date
+                - Amount Due
+                - Payment Due Date
+                - FED TAX ID
+
+                REMIT TO INFORMATION:
+                - Company Name
+                - Address (full address as one string)
+                - Phone / Fax
+                - Email / Website
+                - Account No
+
+                BILL TO & PAYMENT DUE FROM:
+                - Company Name
+                - Address (full address as one string)
+                - Phone
+                - Account No
+
+                SHIPPER INFORMATION:
+                - Shipper Account #
+                - Shipper Name
+                - Shipper Address (full address as one string)
+                - Shipper Phone
+
+                CONSIGNEE INFORMATION:
+                - Consignee Account #
+                - Consignee Name
+                - Consignee Address (full address as one string)
+                - Consignee Phone
+
+                SHIPMENT DETAILS:
+                - P.O. Number
+                - Bill of Lading No
+                - Tariff
+                - Payment Terms
+                - Total Pieces
+                - Total Weight
+
+                LINE ITEMS (extract each piece/line item):
+                - Number of pieces
+                - Description
+                - Weight (lbs)
+                - Class
+                - Rate
+                - Charge
+
+                TOTALS:
+                - Subtotal
+                - Tax amount
+                - Total Amount
+
+                Format as JSON with this exact structure:
+                {
+                    ""service"": ""string"",
+                    ""freightBillNo"": ""string"",
+                    ""shipmentDate"": ""string"",
+                    ""amountDue"": { ""currencySymbol"": ""$"", ""amount"": 0.00 },
+                    ""paymentDueDate"": ""string"",
+                    ""fedTaxId"": ""string"",
+                    ""remitTo"": {
+                        ""name"": ""string"",
+                        ""address"": { ""fullAddress"": ""string"" },
+                        ""phone"": ""string"",
+                        ""fax"": ""string"",
+                        ""email"": ""string"",
+                        ""website"": ""string"",
+                        ""accountNumber"": ""string""
+                    },
+                    ""billTo"": {
+                        ""name"": ""string"",
+                        ""address"": { ""fullAddress"": ""string"" },
+                        ""phone"": ""string"",
+                        ""accountNumber"": ""string""
+                    },
+                    ""shipper"": {
+                        ""accountNumber"": ""string"",
+                        ""name"": ""string"",
+                        ""address"": { ""fullAddress"": ""string"" },
+                        ""phone"": ""string""
+                    },
+                    ""consignee"": {
+                        ""accountNumber"": ""string"",
+                        ""name"": ""string"",
+                        ""address"": { ""fullAddress"": ""string"" },
+                        ""phone"": ""string""
+                    },
+                    ""shipmentDetails"": {
+                        ""service"": ""string"",
+                        ""shipmentDate"": ""string"",
+                        ""poNumber"": ""string"",
                         ""billOfLading"": ""string"",
-                        ""vendorName"": ""string"",
-                        ""customerName"": ""string"",
-                        ""shipper"": {
-                            ""name"": ""string"",
-                            ""address"": {
-                                ""street"": ""string"",
-                                ""city"": ""string"",
-                                ""state"": ""string"",
-                                ""country"": ""string"",
-                                ""postalCode"": ""string""
-                            }
-                        },
-                        ""consignee"": {
-                            ""name"": ""string"",
-                            ""address"": {
-                                ""street"": ""string"",
-                                ""city"": ""string"",
-                                ""state"": ""string"",
-                                ""country"": ""string"",
-                                ""postalCode"": ""string""
-                            }
-                        },
-                        ""items"": [
-                            {
-                                ""description"": ""string"",
-                                ""amount"": { ""currencySymbol"": ""string"", ""amount"": number }
-                            }
-                        ],
-                        ""subTotal"": { ""currencySymbol"": ""string"", ""amount"": number },
-                        ""totalTax"": { ""currencySymbol"": ""string"", ""amount"": number },
-                        ""invoiceTotal"": { ""currencySymbol"": ""string"", ""amount"": number }
-                    }";
+                        ""tariff"": ""string"",
+                        ""paymentTerms"": ""string"",
+                        ""totalPieces"": 0,
+                        ""totalWeight"": 0.00
+                    },
+                    ""items"": [
+                        {
+                            ""pieces"": 0,
+                            ""description"": ""string"",
+                            ""weight"": 0.00,
+                            ""class"": ""string"",
+                            ""rate"": 0.00,
+                            ""charge"": { ""currencySymbol"": ""$"", ""amount"": 0.00 }
+                        }
+                    ],
+                    ""subTotal"": { ""currencySymbol"": ""$"", ""amount"": 0.00 },
+                    ""totalTax"": { ""currencySymbol"": ""$"", ""amount"": 0.00 },
+                    ""invoiceTotal"": { ""currencySymbol"": ""$"", ""amount"": 0.00 }
+                }";
 
                 //var requestBody = new GeminiRequest
                 //{
@@ -167,50 +235,16 @@ namespace WebApplication1.Services
                     .Substring(jsonStart, jsonEnd - jsonStart + 1);
 
                 // Parse the JSON response into our model
-                var parsedInvoice = JsonSerializer.Deserialize<ParsedInvoice>(
-                    jsonResponse,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                );
-
-                // Add confidence scores (Gemini doesn't provide these, so we'll set a default)
-                const double defaultConfidence = 0.85;
-                parsedInvoice.VendorNameConfidence = defaultConfidence;
-                parsedInvoice.CustomerNameConfidence = defaultConfidence;
-
-                // Set confidence for shipping information
-                if (parsedInvoice.Shipper != null)
-                {
-                    parsedInvoice.Shipper.NameConfidence = defaultConfidence;
-                    if (parsedInvoice.Shipper.Address != null)
-                    {
-                        parsedInvoice.Shipper.AddressConfidence = defaultConfidence;
+                var options = new JsonSerializerOptions 
+                { 
+                    PropertyNameCaseInsensitive = true,
+                    Converters = { 
+                        new FlexibleDecimalConverter(),
+                        new FlexibleIntConverter()
                     }
-                }
-
-                if (parsedInvoice.Consignee != null)
-                {
-                    parsedInvoice.Consignee.NameConfidence = defaultConfidence;
-                    if (parsedInvoice.Consignee.Address != null)
-                    {
-                        parsedInvoice.Consignee.AddressConfidence = defaultConfidence;
-                    }
-                }
-
-                foreach (var item in parsedInvoice.Items)
-                {
-                    item.DescriptionConfidence = defaultConfidence;
-                    if (item.Amount != null)
-                    {
-                        item.Amount.Confidence = defaultConfidence;
-                    }
-                }
-
-                if (parsedInvoice.SubTotal != null)
-                    parsedInvoice.SubTotal.Confidence = defaultConfidence;
-                if (parsedInvoice.TotalTax != null)
-                    parsedInvoice.TotalTax.Confidence = defaultConfidence;
-                if (parsedInvoice.InvoiceTotal != null)
-                    parsedInvoice.InvoiceTotal.Confidence = defaultConfidence;
+                };
+                
+                var parsedInvoice = JsonSerializer.Deserialize<ParsedInvoice>(jsonResponse, options);
 
                 return parsedInvoice;
             }
@@ -296,6 +330,68 @@ namespace WebApplication1.Services
 
             [JsonPropertyName("topK")]
             public int TopK { get; set; }
+        }
+    }
+
+    public class FlexibleDecimalConverter : JsonConverter<decimal?>
+    {
+        public override decimal? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.Number:
+                    return reader.GetDecimal();
+                case JsonTokenType.String:
+                    var stringValue = reader.GetString();
+                    if (string.IsNullOrWhiteSpace(stringValue))
+                        return null;
+                    if (decimal.TryParse(stringValue, out decimal result))
+                        return result;
+                    return null;
+                case JsonTokenType.Null:
+                    return null;
+                default:
+                    return null;
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, decimal? value, JsonSerializerOptions options)
+        {
+            if (value.HasValue)
+                writer.WriteNumberValue(value.Value);
+            else
+                writer.WriteNullValue();
+        }
+    }
+
+    public class FlexibleIntConverter : JsonConverter<int?>
+    {
+        public override int? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            switch (reader.TokenType)
+            {
+                case JsonTokenType.Number:
+                    return reader.GetInt32();
+                case JsonTokenType.String:
+                    var stringValue = reader.GetString();
+                    if (string.IsNullOrWhiteSpace(stringValue))
+                        return null;
+                    if (int.TryParse(stringValue, out int result))
+                        return result;
+                    return null;
+                case JsonTokenType.Null:
+                    return null;
+                default:
+                    return null;
+            }
+        }
+
+        public override void Write(Utf8JsonWriter writer, int? value, JsonSerializerOptions options)
+        {
+            if (value.HasValue)
+                writer.WriteNumberValue(value.Value);
+            else
+                writer.WriteNullValue();
         }
     }
 }

@@ -1,13 +1,5 @@
 namespace WebApplication1.Models
 {
-    public class ShippingInfo
-    {
-        public string? Name { get; set; }
-        public double? NameConfidence { get; set; }
-        public Address? Address { get; set; }
-        public double? AddressConfidence { get; set; }
-    }
-
     public class Address
     {
         public string? Street { get; set; }
@@ -15,37 +7,83 @@ namespace WebApplication1.Models
         public string? State { get; set; }
         public string? Country { get; set; }
         public string? PostalCode { get; set; }
+        public string? FullAddress { get; set; }
+    }
+
+    public class CompanyContact
+    {
+        public string? Name { get; set; }
+        public Address? Address { get; set; }
+        public string? Phone { get; set; }
+        public string? Fax { get; set; }
+        public string? Email { get; set; }
+        public string? Website { get; set; }
+        public string? AccountNumber { get; set; }
+    }
+
+    public class ShippingInfo
+    {
+        public string? AccountNumber { get; set; }
+        public string? Name { get; set; }
+        public Address? Address { get; set; }
+        public string? Phone { get; set; }
+    }
+
+    public class ShipmentDetails
+    {
+        public string? Service { get; set; }
+        public string? ShipmentDate { get; set; }
+        public string? PoNumber { get; set; }
+        public string? BillOfLading { get; set; }
+        public string? Tariff { get; set; }
+        public string? PaymentTerms { get; set; }
+        public int? TotalPieces { get; set; }
+        public decimal? TotalWeight { get; set; }
+    }
+
+    public class ShipmentItem
+    {
+        public int? Pieces { get; set; }
+        public string? Description { get; set; }
+        public decimal? Weight { get; set; }
+        public string? Class { get; set; }
+        public decimal? Rate { get; set; }
+        public CurrencyField? Charge { get; set; }
     }
 
     public class ParsedInvoice
     {
+        // Invoice Information
+        public string? Service { get; set; }
         public string? FreightBillNo { get; set; }
-        public double? FreightBillNoConfidence { get; set; }
-        public string? BillOfLading { get; set; }
-        public double? BillOfLadingConfidence { get; set; }
-        public string? VendorName { get; set; }
-        public double? VendorNameConfidence { get; set; }
-        public string? CustomerName { get; set; }
-        public double? CustomerNameConfidence { get; set; }
+        public string? ShipmentDate { get; set; }
+        public CurrencyField? AmountDue { get; set; }
+        public string? PaymentDueDate { get; set; }
+        public string? FedTaxId { get; set; }
+
+        // Company Information
+        public CompanyContact? RemitTo { get; set; }
+        public CompanyContact? BillTo { get; set; }
+
+        // Shipping Information
         public ShippingInfo? Shipper { get; set; }
         public ShippingInfo? Consignee { get; set; }
-        public List<InvoiceItem> Items { get; set; } = new();
+
+        // Shipment Details
+        public ShipmentDetails? ShipmentDetails { get; set; }
+
+        // Line Items
+        public List<ShipmentItem> Items { get; set; } = new();
+
+        // Totals
         public CurrencyField? SubTotal { get; set; }
         public CurrencyField? TotalTax { get; set; }
         public CurrencyField? InvoiceTotal { get; set; }
     }
 
-    public class InvoiceItem
-    {
-        public string? Description { get; set; }
-        public double? DescriptionConfidence { get; set; }
-        public CurrencyField? Amount { get; set; }
-    }
-
     public class CurrencyField
     {
         public string? CurrencySymbol { get; set; }
-        public double Amount { get; set; }
-        public double? Confidence { get; set; }
+        public decimal Amount { get; set; }
     }
 }
