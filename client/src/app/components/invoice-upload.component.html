@@ -1,0 +1,229 @@
+<div class="container">
+  <div class="upload-section">
+    <h2>Upload Invoice</h2>
+    <div class="parser-selection">
+      <label>
+        <input type="radio" name="parser" [value]="'azure'" [(ngModel)]="selectedParser">
+        Azure Document Intelligence
+      </label>
+      <label>
+        <input type="radio" name="parser" [value]="'gemini'" [(ngModel)]="selectedParser">
+        Google Gemini
+      </label>
+    </div>
+    <input type="file" 
+           accept="image/*" 
+           (change)="onFileSelected($event)"
+           [class.drag-over]="isDragging"
+           (dragover)="onDragOver($event)"
+           (dragleave)="isDragging = false"
+           (drop)="onDrop($event)">
+    <div *ngIf="isLoading" class="loading">Processing with {{selectedParser}}...</div>
+  </div>
+
+  <div class="content-wrapper" *ngIf="imagePreviewUrl || parsedInvoice">
+    <div class="image-preview" *ngIf="imagePreviewUrl">
+      <div class="image-container">
+        <img [src]="imagePreviewUrl" alt="Invoice Preview" class="preview-image">
+      </div>
+    </div>
+    
+    <div *ngIf="parsedInvoice" class="results-section">
+      <h3>Parsed Invoice Details</h3>
+      <div class="invoice-details">
+        <!-- Basic Invoice Information -->
+        <div class="section">
+          <h4>Invoice Information</h4>
+          <p *ngIf="parsedInvoice.service">
+            <strong>Service:</strong> 
+            {{parsedInvoice.service}}
+          </p>
+          <p *ngIf="parsedInvoice.freightBillNo">
+            <strong>Freight Bill No:</strong> 
+            {{parsedInvoice.freightBillNo}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDate">
+            <strong>Shipment Date:</strong> 
+            {{parsedInvoice.shipmentDate}}
+          </p>
+          <p *ngIf="parsedInvoice.amountDue">
+            <strong>Amount Due:</strong> 
+            {{formatCurrency(parsedInvoice.amountDue)}}
+          </p>
+          <p *ngIf="parsedInvoice.paymentDueDate">
+            <strong>Payment Due Date:</strong> 
+            {{parsedInvoice.paymentDueDate}}
+          </p>
+          <p *ngIf="parsedInvoice.fedTaxId">
+            <strong>FED TAX ID:</strong> 
+            {{parsedInvoice.fedTaxId}}
+          </p>
+        </div>
+
+        <!-- Remit To Information -->
+        <div *ngIf="parsedInvoice.remitTo" class="section">
+          <h4>Remit To Information</h4>
+          <div class="company-info">
+            <p *ngIf="parsedInvoice.remitTo.name">
+              <strong>Company:</strong> {{parsedInvoice.remitTo.name}}
+            </p>
+            <ng-container *ngIf="parsedInvoice.remitTo.address">
+              <div *ngIf="parsedInvoice.remitTo.address.fullAddress" class="address">
+                <p><strong>Address:</strong> {{parsedInvoice.remitTo.address.fullAddress}}</p>
+              </div>
+            </ng-container>
+            <p *ngIf="parsedInvoice.remitTo.phone">
+              <strong>Phone:</strong> {{parsedInvoice.remitTo.phone}}
+            </p>
+            <p *ngIf="parsedInvoice.remitTo.fax">
+              <strong>Fax:</strong> {{parsedInvoice.remitTo.fax}}
+            </p>
+            <p *ngIf="parsedInvoice.remitTo.email">
+              <strong>Email:</strong> {{parsedInvoice.remitTo.email}}
+            </p>
+            <p *ngIf="parsedInvoice.remitTo.website">
+              <strong>Website:</strong> {{parsedInvoice.remitTo.website}}
+            </p>
+            <p *ngIf="parsedInvoice.remitTo.accountNumber">
+              <strong>Account No:</strong> {{parsedInvoice.remitTo.accountNumber}}
+            </p>
+          </div>
+        </div>
+
+        <!-- Bill To Information -->
+        <div *ngIf="parsedInvoice.billTo" class="section">
+          <h4>Bill To Information</h4>
+          <div class="company-info">
+            <p *ngIf="parsedInvoice.billTo.name">
+              <strong>Company:</strong> {{parsedInvoice.billTo.name}}
+            </p>
+            <ng-container *ngIf="parsedInvoice.billTo.address">
+              <div *ngIf="parsedInvoice.billTo.address.fullAddress" class="address">
+                <p><strong>Address:</strong> {{parsedInvoice.billTo.address.fullAddress}}</p>
+              </div>
+            </ng-container>
+            <p *ngIf="parsedInvoice.billTo.phone">
+              <strong>Phone:</strong> {{parsedInvoice.billTo.phone}}
+            </p>
+            <p *ngIf="parsedInvoice.billTo.accountNumber">
+              <strong>Account No:</strong> {{parsedInvoice.billTo.accountNumber}}
+            </p>
+          </div>
+        </div>
+
+        <!-- Shipment Details -->
+        <div *ngIf="parsedInvoice.shipmentDetails" class="section">
+          <h4>Shipment Details</h4>
+          <p *ngIf="parsedInvoice.shipmentDetails.service">
+            <strong>Service:</strong> {{parsedInvoice.shipmentDetails.service}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDetails.shipmentDate">
+            <strong>Shipment Date:</strong> {{parsedInvoice.shipmentDetails.shipmentDate}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDetails.poNumber">
+            <strong>P.O. Number:</strong> {{parsedInvoice.shipmentDetails.poNumber}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDetails.billOfLading">
+            <strong>Bill of Lading:</strong> {{parsedInvoice.shipmentDetails.billOfLading}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDetails.tariff">
+            <strong>Tariff:</strong> {{parsedInvoice.shipmentDetails.tariff}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDetails.paymentTerms">
+            <strong>Payment Terms:</strong> {{parsedInvoice.shipmentDetails.paymentTerms}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDetails.totalPieces !== undefined">
+            <strong>Total Pieces:</strong> {{parsedInvoice.shipmentDetails.totalPieces}}
+          </p>
+          <p *ngIf="parsedInvoice.shipmentDetails.totalWeight">
+            <strong>Total Weight:</strong> {{parsedInvoice.shipmentDetails.totalWeight}} lbs
+          </p>
+        </div>
+
+        <!-- Shipper Information -->
+        <div *ngIf="parsedInvoice.shipper" class="section">
+          <h4>Shipper Information</h4>
+          <div class="company-info">
+            <p *ngIf="parsedInvoice.shipper.accountNumber">
+              <strong>Account No:</strong> {{parsedInvoice.shipper.accountNumber}}
+            </p>
+            <p *ngIf="parsedInvoice.shipper.name">
+              <strong>Name:</strong> {{parsedInvoice.shipper.name}}
+            </p>
+            <ng-container *ngIf="parsedInvoice.shipper.address">
+              <div *ngIf="parsedInvoice.shipper.address.fullAddress" class="address">
+                <p><strong>Address:</strong> {{parsedInvoice.shipper.address.fullAddress}}</p>
+              </div>
+            </ng-container>
+            <p *ngIf="parsedInvoice.shipper.phone">
+              <strong>Phone:</strong> {{parsedInvoice.shipper.phone}}
+            </p>
+          </div>
+        </div>
+
+        <!-- Consignee Information -->
+        <div *ngIf="parsedInvoice.consignee" class="section">
+          <h4>Consignee Information</h4>
+          <div class="company-info">
+            <p *ngIf="parsedInvoice.consignee.accountNumber">
+              <strong>Account No:</strong> {{parsedInvoice.consignee.accountNumber}}
+            </p>
+            <p *ngIf="parsedInvoice.consignee.name">
+              <strong>Name:</strong> {{parsedInvoice.consignee.name}}
+            </p>
+            <ng-container *ngIf="parsedInvoice.consignee.address">
+              <div *ngIf="parsedInvoice.consignee.address.fullAddress" class="address">
+                <p><strong>Address:</strong> {{parsedInvoice.consignee.address.fullAddress}}</p>
+              </div>
+            </ng-container>
+            <p *ngIf="parsedInvoice.consignee.phone">
+              <strong>Phone:</strong> {{parsedInvoice.consignee.phone}}
+            </p>
+          </div>
+        </div>
+
+        <!-- Line Items -->
+        <div *ngIf="parsedInvoice.items?.length" class="section">
+          <h4>Line Items</h4>
+          <div class="line-items">
+            <table>
+              <thead>
+                <tr>
+                  <th>Pieces</th>
+                  <th>Description</th>
+                  <th>Weight (lbs)</th>
+                  <th>Class</th>
+                  <th>Rate</th>
+                  <th>Charge</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of parsedInvoice.items">
+                  <td>{{item.pieces}}</td>
+                  <td>{{item.description}}</td>
+                  <td>{{item.weight}}</td>
+                  <td>{{item.class}}</td>
+                  <td>{{item.rate}}</td>
+                  <td>{{formatCurrency(item.charge)}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Totals -->
+        <div class="section totals">
+          <p *ngIf="parsedInvoice.subTotal">
+            <strong>Subtotal:</strong> {{formatCurrency(parsedInvoice.subTotal)}}
+          </p>
+          <p *ngIf="parsedInvoice.totalTax">
+            <strong>Tax:</strong> {{formatCurrency(parsedInvoice.totalTax)}}
+          </p>
+          <p *ngIf="parsedInvoice.invoiceTotal">
+            <strong>Total:</strong> {{formatCurrency(parsedInvoice.invoiceTotal)}}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
