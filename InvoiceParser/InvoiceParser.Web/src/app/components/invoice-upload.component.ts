@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ToastrService } from 'ngx-toastr';
 import { InvoiceService } from '../services/invoice.service';
 import { ParsedInvoice, CurrencyField, CompanyContact, ShipmentDetails, ShipmentItem } from '../models/invoice.model';
 
@@ -18,7 +19,10 @@ export class InvoiceUploadComponent {
   imagePreviewUrl: string | null = null;
   selectedParser: 'azure' | 'gemini' = 'gemini';
 
-  constructor(private invoiceService: InvoiceService) {}
+  constructor(
+    private invoiceService: InvoiceService,
+    private toastr: ToastrService
+  ) {}
 
   formatCurrency(field?: CurrencyField): string {
     if (!field) return '';
@@ -51,7 +55,7 @@ export class InvoiceUploadComponent {
 
   private processFile(file: File) {
     if (!file.type.startsWith('image/')) {
-      alert('Please upload an image file');
+      this.toastr.error('Please upload an image file', 'Invalid File Type');
       return;
     }
 
@@ -67,10 +71,12 @@ export class InvoiceUploadComponent {
       next: (result) => {
         this.parsedInvoice = result;
         this.isLoading = false;
+        this.toastr.success('Invoice parsed successfully!', 'Success');
       },
       error: (error) => {
         console.error('Error parsing invoice:', error);
-        alert('Error parsing invoice. Please try again.');
+        const errorMessage = error.error?.message || error.message || 'Unknown error occurred';
+        this.toastr.error(`Error parsing invoice: ${errorMessage}`, 'Parsing Failed');
         this.isLoading = false;
       }
     });
