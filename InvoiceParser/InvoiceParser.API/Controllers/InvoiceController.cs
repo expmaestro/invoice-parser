@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InvoiceParser.Models;
-using InvoiceParser.Services;
+using InvoiceParser.Api.Interfaces;
 
 namespace InvoiceParser.Controllers
 {

@@ -1,13 +1,10 @@
 using Azure;
 using Azure.AI.DocumentIntelligence;
+using InvoiceParser.Api.Interfaces;
 using InvoiceParser.Models;
 
 namespace InvoiceParser.Services
 {
-    public interface IInvoiceParserService
-    {
-        Task<ParsedInvoice> ParseInvoiceImageAsync(Stream imageStream);
-    }
 
     public class InvoiceParserService : IInvoiceParserService
     {

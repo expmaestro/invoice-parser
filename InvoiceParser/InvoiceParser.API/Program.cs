@@ -1,3 +1,4 @@
+using InvoiceParser.Api.Interfaces;
 using InvoiceParser.Services;
 
 var builder = WebApplication.CreateBuilder(args);

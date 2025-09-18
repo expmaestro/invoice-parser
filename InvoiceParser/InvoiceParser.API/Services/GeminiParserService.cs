@@ -1,14 +1,11 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using InvoiceParser.Api.Interfaces;
 using InvoiceParser.Models;
 
 namespace InvoiceParser.Services
 {
-    public interface IGeminiParserService
-    {
-        Task<ParsedInvoice> ParseInvoiceImageAsync(Stream imageStream);
-    }
 
     public class GeminiParserService : IGeminiParserService
     {
@@ -149,56 +146,28 @@ namespace InvoiceParser.Services
                     ""invoiceTotal"": { ""currencySymbol"": ""$"", ""amount"": 0.00 }
                 }";
 
-                //var requestBody = new GeminiRequest
-                //{
-                //    Contents = new[]
-                //    {
-                //        new RequestContent
-                //        {
-                //            Role = "user",
-                //            Parts = new IPart[]
-                //            {
-                //                new TextPart { Text = prompt },
-                //                new InlineDataPart 
-                //                { 
-                //                    InlineData = new InlineData 
-                //                    { 
-                //                        MimeType = "image/jpeg",
-                //                        Data = imageBase64
-                //                    }
-                //                }
-                //            }
-                //        }
-                //    },
-                //    GenerationConfig = new GenerationConfig
-                //    {
-                //        Temperature = 0.1f,
-                //        TopP = 0.8f,
-                //        TopK = 40
-                //    }
-                //};
 
                 var requestBody = new
                 {
                     contents = new[]
-    {
-        new
-        {
-            role = "user",
-            parts = new object[]
-            {
-                new { text = prompt },
-                new
-                {
-                    inlineData = new
                     {
-                        mimeType = "image/jpeg",
-                        data = imageBase64
-                    }
-                }
-            }
-        }
-    },
+                        new
+                        {
+                            role = "user",
+                            parts = new object[]
+                            {
+                                new { text = prompt },
+                                new
+                                {
+                                    inlineData = new
+                                    {
+                                        mimeType = "image/jpeg",
+                                        data = imageBase64
+                                    }
+                                }
+                            }
+                        }
+                    },
                     generationConfig = new
                     {
                         temperature = 0.1,
