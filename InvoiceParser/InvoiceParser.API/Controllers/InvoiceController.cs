@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
-using WebApplication1.Models;
-using WebApplication1.Services;
+using InvoiceParser.Models;
+using InvoiceParser.Services;
 
-namespace WebApplication1.Controllers
+namespace InvoiceParser.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

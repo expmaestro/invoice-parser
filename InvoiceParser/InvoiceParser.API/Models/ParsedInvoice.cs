@@ -1,4 +1,4 @@
-namespace WebApplication1.Models
+namespace InvoiceParser.Models
 {
     public class Address
     {

@@ -1,4 +1,4 @@
-using WebApplication1.Services;
+using InvoiceParser.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 

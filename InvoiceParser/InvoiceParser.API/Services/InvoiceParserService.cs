@@ -1,8 +1,8 @@
 using Azure;
 using Azure.AI.DocumentIntelligence;
-using WebApplication1.Models;
+using InvoiceParser.Models;
 
-namespace WebApplication1.Services
+namespace InvoiceParser.Services
 {
     public interface IInvoiceParserService
     {
