@@ -71,9 +71,26 @@ export interface ParsedInvoice {
     subTotal?: CurrencyField;
     totalTax?: CurrencyField;
     invoiceTotal?: CurrencyField;
+
+    // Metadata Information
+    usageMetadata?: UsageMetadata;
+    modelVersion?: string;
 }
 
 export interface CurrencyField {
     currencySymbol?: string;
     amount: number;
+}
+
+export interface UsageMetadata {
+    promptTokenCount: number;
+    candidatesTokenCount: number;
+    totalTokenCount: number;
+    promptTokensDetails?: PromptTokenDetail[];
+    thoughtsTokenCount?: number;
+}
+
+export interface PromptTokenDetail {
+    modality?: string;
+    tokenCount: number;
 }

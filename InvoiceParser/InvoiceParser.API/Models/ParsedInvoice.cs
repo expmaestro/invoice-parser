@@ -79,11 +79,30 @@ namespace InvoiceParser.Models
         public CurrencyField? SubTotal { get; set; }
         public CurrencyField? TotalTax { get; set; }
         public CurrencyField? InvoiceTotal { get; set; }
+
+        // Metadata Information
+        public UsageMetadata? UsageMetadata { get; set; }
+        public string? ModelVersion { get; set; }
     }
 
     public class CurrencyField
     {
         public string? CurrencySymbol { get; set; }
         public decimal Amount { get; set; }
+    }
+
+    public class UsageMetadata
+    {
+        public int PromptTokenCount { get; set; }
+        public int CandidatesTokenCount { get; set; }
+        public int TotalTokenCount { get; set; }
+        public List<PromptTokenDetail>? PromptTokensDetails { get; set; }
+        public int? ThoughtsTokenCount { get; set; }
+    }
+
+    public class PromptTokenDetail
+    {
+        public string? Modality { get; set; }
+        public int TokenCount { get; set; }
     }
 }

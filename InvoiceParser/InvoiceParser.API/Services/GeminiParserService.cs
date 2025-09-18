@@ -215,6 +215,25 @@ namespace InvoiceParser.Services
                 
                 var parsedInvoice = JsonSerializer.Deserialize<ParsedInvoice>(jsonResponse, options);
 
+                // Add metadata from Gemini response
+                if (geminiResponse?.UsageMetadata != null)
+                {
+                    parsedInvoice.UsageMetadata = new UsageMetadata
+                    {
+                        PromptTokenCount = geminiResponse.UsageMetadata.PromptTokenCount,
+                        CandidatesTokenCount = geminiResponse.UsageMetadata.CandidatesTokenCount,
+                        TotalTokenCount = geminiResponse.UsageMetadata.TotalTokenCount,
+                        ThoughtsTokenCount = geminiResponse.UsageMetadata.ThoughtsTokenCount,
+                        PromptTokensDetails = geminiResponse.UsageMetadata.PromptTokensDetails?.Select(ptd => new PromptTokenDetail
+                        {
+                            Modality = ptd.Modality,
+                            TokenCount = ptd.TokenCount
+                        }).ToList()
+                    };
+                }
+
+                parsedInvoice.ModelVersion = geminiResponse?.ModelVersion;
+
                 return parsedInvoice;
             }
             catch (Exception ex)
@@ -227,6 +246,12 @@ namespace InvoiceParser.Services
         {
             [JsonPropertyName("candidates")]
             public List<Candidate> Candidates { get; set; }
+
+            [JsonPropertyName("usageMetadata")]
+            public GeminiUsageMetadata UsageMetadata { get; set; }
+
+            [JsonPropertyName("modelVersion")]
+            public string ModelVersion { get; set; }
         }
 
         private class Candidate
@@ -299,6 +324,33 @@ namespace InvoiceParser.Services
 
             [JsonPropertyName("topK")]
             public int TopK { get; set; }
+        }
+
+        private class GeminiUsageMetadata
+        {
+            [JsonPropertyName("promptTokenCount")]
+            public int PromptTokenCount { get; set; }
+
+            [JsonPropertyName("candidatesTokenCount")]
+            public int CandidatesTokenCount { get; set; }
+
+            [JsonPropertyName("totalTokenCount")]
+            public int TotalTokenCount { get; set; }
+
+            [JsonPropertyName("promptTokensDetails")]
+            public List<GeminiPromptTokenDetail> PromptTokensDetails { get; set; }
+
+            [JsonPropertyName("thoughtsTokenCount")]
+            public int? ThoughtsTokenCount { get; set; }
+        }
+
+        private class GeminiPromptTokenDetail
+        {
+            [JsonPropertyName("modality")]
+            public string Modality { get; set; }
+
+            [JsonPropertyName("tokenCount")]
+            public int TokenCount { get; set; }
         }
     }
 

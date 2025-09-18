@@ -1,24 +1,51 @@
 <div class="container">
-  <div class="upload-section">
-    <h2>Upload Invoice</h2>
-    <div class="parser-selection">
-      <label>
-        <input type="radio" name="parser" [value]="'azure'" [(ngModel)]="selectedParser">
-        Azure Document Intelligence
-      </label>
-      <label>
-        <input type="radio" name="parser" [value]="'gemini'" [(ngModel)]="selectedParser">
-        Google Gemini
-      </label>
+  <div class="top-section">
+    <div class="upload-section">
+      <h2>Upload Invoice</h2>
+      <div class="parser-selection">
+        <label>
+          <input type="radio" name="parser" [value]="'azure'" [(ngModel)]="selectedParser">
+          Azure Document AI
+        </label>
+        <label>
+          <input type="radio" name="parser" [value]="'gemini'" [(ngModel)]="selectedParser">
+          Google Gemini
+        </label>
+      </div>
+      <input type="file" 
+             accept="image/*" 
+             (change)="onFileSelected($event)"
+             [class.drag-over]="isDragging"
+             (dragover)="onDragOver($event)"
+             (dragleave)="isDragging = false"
+             (drop)="onDrop($event)">
+      <div *ngIf="isLoading" class="loading">Processing with {{selectedParser}}...</div>
     </div>
-    <input type="file" 
-           accept="image/*" 
-           (change)="onFileSelected($event)"
-           [class.drag-over]="isDragging"
-           (dragover)="onDragOver($event)"
-           (dragleave)="isDragging = false"
-           (drop)="onDrop($event)">
-    <div *ngIf="isLoading" class="loading">Processing with {{selectedParser}}...</div>
+
+    <!-- Processing Information -->
+    <div *ngIf="parsedInvoice && (parsedInvoice.usageMetadata || parsedInvoice.modelVersion)" class="processing-info">
+      <h4>Processing Info</h4>
+      <div class="metadata-compact">
+        <p *ngIf="parsedInvoice.modelVersion">
+          <strong>Model:</strong> {{parsedInvoice.modelVersion}}
+        </p>
+        <div *ngIf="parsedInvoice.usageMetadata" class="usage-metadata-compact">
+          <p><strong>Tokens:</strong> {{parsedInvoice.usageMetadata.totalTokenCount | number}}</p>
+          <div class="token-breakdown">
+            <span class="token-item">Prompt: {{parsedInvoice.usageMetadata.promptTokenCount | number}}</span>
+            <span class="token-item">Response: {{parsedInvoice.usageMetadata.candidatesTokenCount | number}}</span>
+            <span *ngIf="parsedInvoice.usageMetadata.thoughtsTokenCount" class="token-item">
+              Thoughts: {{parsedInvoice.usageMetadata.thoughtsTokenCount | number}}
+            </span>
+          </div>
+          <div *ngIf="parsedInvoice.usageMetadata.promptTokensDetails?.length" class="modality-breakdown">
+            <span *ngFor="let detail of parsedInvoice.usageMetadata.promptTokensDetails" class="modality-item">
+              {{detail.modality}}: {{detail.tokenCount | number}}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <div class="content-wrapper" *ngIf="imagePreviewUrl || parsedInvoice">
