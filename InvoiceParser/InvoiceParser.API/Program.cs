@@ -24,6 +24,7 @@ builder.Services.AddHttpClient("Gemini", client =>
 
 builder.Services.AddScoped<IInvoiceParserService, InvoiceParserService>();
 builder.Services.AddScoped<IGeminiParserService, GeminiParserService>();
+builder.Services.AddScoped<IApiResponseLogService, ApiResponseLogService>();
 
 var app = builder.Build();
 

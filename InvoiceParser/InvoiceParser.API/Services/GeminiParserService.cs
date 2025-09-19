@@ -11,24 +11,32 @@ namespace InvoiceParser.Services
     {
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
+        private readonly IApiResponseLogService _apiResponseLogService;
         private readonly string _apiKey;
 
-        public GeminiParserService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+        public GeminiParserService(IConfiguration configuration, IHttpClientFactory httpClientFactory, IApiResponseLogService apiResponseLogService)
         {
             _configuration = configuration;
             _httpClient = httpClientFactory.CreateClient("Gemini");
+            _apiResponseLogService = apiResponseLogService;
             _apiKey = _configuration["Google:GeminiApiKey"] 
                 ?? throw new ArgumentNullException("Google:GeminiApiKey is not configured");
         }
 
         public async Task<ParsedInvoice> ParseInvoiceImageAsync(Stream imageStream)
         {
+            var startTime = DateTime.UtcNow;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var requestId = Guid.NewGuid().ToString();
+            string? requestPayload = null;
+            
             try
             {
                 // Convert image to base64
                 using var ms = new MemoryStream();
                 await imageStream.CopyToAsync(ms);
                 var imageBase64 = Convert.ToBase64String(ms.ToArray());
+                var imageSize = ms.Length;
 
                 var prompt = @"Analyze this logistics invoice image and extract the following information as structured JSON:
 
@@ -179,8 +187,9 @@ namespace InvoiceParser.Services
                 var request = new HttpRequestMessage(HttpMethod.Post, 
                     $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}");
                 
+                requestPayload = JsonSerializer.Serialize(requestBody);
                 request.Content = new StringContent(
-                    JsonSerializer.Serialize(requestBody),
+                    requestPayload,
                     Encoding.UTF8,
                     "application/json"
                 );
@@ -189,7 +198,64 @@ namespace InvoiceParser.Services
                 response.EnsureSuccessStatusCode();
 
                 var responseContent = await response.Content.ReadAsStringAsync();
+                stopwatch.Stop();
+
                 var geminiResponse = JsonSerializer.Deserialize<GeminiResponse>(responseContent);
+
+                // Save API response to MongoDB
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var apiResponseLog = new ApiResponseLog
+                        {
+                            RequestId = requestId,
+                            Timestamp = startTime,
+                            ApiProvider = "gemini",
+                            ModelVersion = geminiResponse?.ModelVersion,
+                            RequestPayload = requestPayload,
+                            ResponseContent = responseContent,
+                            ProcessingTimeMs = stopwatch.ElapsedMilliseconds,
+                            Success = true,
+                            FileSize = imageSize
+                        };
+
+                        // Add usage metadata as BSON document
+                        if (geminiResponse?.UsageMetadata != null)
+                        {
+                            var usageMetadataDict = new Dictionary<string, object>
+                            {
+                                ["promptTokenCount"] = geminiResponse.UsageMetadata.PromptTokenCount,
+                                ["candidatesTokenCount"] = geminiResponse.UsageMetadata.CandidatesTokenCount,
+                                ["totalTokenCount"] = geminiResponse.UsageMetadata.TotalTokenCount
+                            };
+
+                            if (geminiResponse.UsageMetadata.ThoughtsTokenCount.HasValue)
+                            {
+                                usageMetadataDict["thoughtsTokenCount"] = geminiResponse.UsageMetadata.ThoughtsTokenCount.Value;
+                            }
+
+                            if (geminiResponse.UsageMetadata.PromptTokensDetails?.Any() == true)
+                            {
+                                usageMetadataDict["promptTokensDetails"] = geminiResponse.UsageMetadata.PromptTokensDetails
+                                    .Select(ptd => new Dictionary<string, object>
+                                    {
+                                        ["modality"] = ptd.Modality ?? "",
+                                        ["tokenCount"] = ptd.TokenCount
+                                    }).ToList();
+                            }
+
+                            apiResponseLog.UsageMetadata = new MongoDB.Bson.BsonDocument(usageMetadataDict);
+                        }
+
+                        await _apiResponseLogService.SaveApiResponseAsync(apiResponseLog);
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but don't fail the main request
+                        Console.WriteLine($"Failed to save API response to MongoDB: {ex.Message}");
+                    }
+                });
 
                 // Extract the JSON response from the Gemini text output
                 var jsonStart = geminiResponse?.Candidates?[0]?.Content?.Parts?[0]?.Text?.IndexOf('{') ?? -1;
@@ -238,6 +304,34 @@ namespace InvoiceParser.Services
             }
             catch (Exception ex)
             {
+                stopwatch?.Stop();
+                
+                // Save failed API response to MongoDB
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var apiResponseLog = new ApiResponseLog
+                        {
+                            RequestId = requestId,
+                            Timestamp = startTime,
+                            ApiProvider = "gemini",
+                            RequestPayload = requestPayload,
+                            ResponseContent = ex.Message,
+                            ProcessingTimeMs = stopwatch?.ElapsedMilliseconds ?? 0,
+                            Success = false,
+                            ErrorMessage = ex.ToString()
+                        };
+
+                        await _apiResponseLogService.SaveApiResponseAsync(apiResponseLog);
+                    }
+                    catch (Exception logEx)
+                    {
+                        // Log error but don't fail the main request
+                        Console.WriteLine($"Failed to save failed API response to MongoDB: {logEx.Message}");
+                    }
+                });
+
                 throw new Exception($"Error processing invoice with Gemini: {ex.Message}", ex);
             }
         }
