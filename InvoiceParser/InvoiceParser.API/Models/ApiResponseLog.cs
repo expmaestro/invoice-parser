@@ -44,5 +44,14 @@ namespace InvoiceParser.Models
 
         [BsonElement("fileSize")]
         public long? FileSize { get; set; }
+
+        [BsonElement("imageData")]
+        public byte[]? ImageData { get; set; }
+
+        [BsonElement("imageMimeType")]
+        public string? ImageMimeType { get; set; }
+
+        [BsonElement("imageBase64")]
+        public string? ImageBase64 { get; set; }
     }
 }

@@ -32,11 +32,13 @@ namespace InvoiceParser.Services
             
             try
             {
-                // Convert image to base64
+                // Convert image to base64 and capture image data
                 using var ms = new MemoryStream();
                 await imageStream.CopyToAsync(ms);
-                var imageBase64 = Convert.ToBase64String(ms.ToArray());
+                var imageBytes = ms.ToArray();
+                var imageBase64 = Convert.ToBase64String(imageBytes);
                 var imageSize = ms.Length;
+                var imageMimeType = GetImageMimeType(imageBytes);
 
                 var prompt = @"Analyze this logistics invoice image and extract the following information as structured JSON:
 
@@ -217,7 +219,10 @@ namespace InvoiceParser.Services
                             ResponseContent = responseContent,
                             ProcessingTimeMs = stopwatch.ElapsedMilliseconds,
                             Success = true,
-                            FileSize = imageSize
+                            FileSize = imageSize,
+                            ImageData = imageBytes,
+                            ImageMimeType = imageMimeType,
+                            ImageBase64 = imageBase64
                         };
 
                         // Add usage metadata as BSON document
@@ -334,6 +339,38 @@ namespace InvoiceParser.Services
 
                 throw new Exception($"Error processing invoice with Gemini: {ex.Message}", ex);
             }
+        }
+
+        private static string GetImageMimeType(byte[] imageBytes)
+        {
+            if (imageBytes.Length < 4)
+                return "application/octet-stream";
+
+            // Check for common image file signatures
+            // PNG: 89 50 4E 47
+            if (imageBytes[0] == 0x89 && imageBytes[1] == 0x50 && imageBytes[2] == 0x4E && imageBytes[3] == 0x47)
+                return "image/png";
+
+            // JPEG: FF D8 FF
+            if (imageBytes[0] == 0xFF && imageBytes[1] == 0xD8 && imageBytes[2] == 0xFF)
+                return "image/jpeg";
+
+            // GIF: 47 49 46 38
+            if (imageBytes[0] == 0x47 && imageBytes[1] == 0x49 && imageBytes[2] == 0x46 && imageBytes[3] == 0x38)
+                return "image/gif";
+
+            // WebP: 52 49 46 46 (RIFF) and at offset 8: 57 45 42 50 (WEBP)
+            if (imageBytes.Length >= 12 && 
+                imageBytes[0] == 0x52 && imageBytes[1] == 0x49 && imageBytes[2] == 0x46 && imageBytes[3] == 0x46 &&
+                imageBytes[8] == 0x57 && imageBytes[9] == 0x45 && imageBytes[10] == 0x42 && imageBytes[11] == 0x50)
+                return "image/webp";
+
+            // BMP: 42 4D
+            if (imageBytes[0] == 0x42 && imageBytes[1] == 0x4D)
+                return "image/bmp";
+
+            // Default to JPEG if no match (most common for uploads)
+            return "image/jpeg";
         }
 
         private class GeminiResponse

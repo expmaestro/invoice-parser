@@ -69,5 +69,33 @@ namespace InvoiceParser.Controllers
                 return StatusCode(500, new { message = $"Error retrieving API log: {ex.Message}" });
             }
         }
+
+        /// <summary>
+        /// Get the image from a specific API response log
+        /// </summary>
+        [HttpGet("{id}/image")]
+        public async Task<IActionResult> GetLogImage(string id)
+        {
+            try
+            {
+                var log = await _apiResponseLogService.GetApiResponseAsync(id);
+                if (log == null)
+                {
+                    return NotFound(new { message = "API log not found" });
+                }
+
+                if (log.ImageData == null || log.ImageData.Length == 0)
+                {
+                    return NotFound(new { message = "No image data found for this log" });
+                }
+
+                var mimeType = log.ImageMimeType ?? "image/jpeg";
+                return File(log.ImageData, mimeType);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error retrieving image: {ex.Message}" });
+            }
+        }
     }
 }
