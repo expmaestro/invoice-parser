@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using InvoiceParser.Api.Interfaces;
 using InvoiceParser.Models;
+using InvoiceParser.DTOs;
+using InvoiceParser.Services;
 
 namespace InvoiceParser.Controllers
 {
@@ -19,12 +21,13 @@ namespace InvoiceParser.Controllers
         /// Get recent API response logs
         /// </summary>
         [HttpGet("recent")]
-        public async Task<ActionResult<List<ApiResponseLog>>> GetRecentLogs([FromQuery] int limit = 20)
+        public async Task<ActionResult<List<ApiLogDto>>> GetRecentLogs([FromQuery] int limit = 20)
         {
             try
             {
                 var logs = await _apiResponseLogService.GetRecentApiResponsesAsync(limit);
-                return Ok(logs);
+                var dtos = logs.Select(ApiLogMapper.ToDto).ToList();
+                return Ok(dtos);
             }
             catch (Exception ex)
             {
@@ -36,12 +39,13 @@ namespace InvoiceParser.Controllers
         /// Get API response logs by provider (gemini, azure)
         /// </summary>
         [HttpGet("provider/{provider}")]
-        public async Task<ActionResult<List<ApiResponseLog>>> GetLogsByProvider(string provider, [FromQuery] int limit = 20)
+        public async Task<ActionResult<List<ApiLogDto>>> GetLogsByProvider(string provider, [FromQuery] int limit = 20)
         {
             try
             {
                 var logs = await _apiResponseLogService.GetApiResponsesByProviderAsync(provider, limit);
-                return Ok(logs);
+                var dtos = logs.Select(ApiLogMapper.ToDto).ToList();
+                return Ok(dtos);
             }
             catch (Exception ex)
             {
@@ -50,10 +54,10 @@ namespace InvoiceParser.Controllers
         }
 
         /// <summary>
-        /// Get specific API response log by ID
+        /// Get specific API response log by ID with full details
         /// </summary>
         [HttpGet("{id}")]
-        public async Task<ActionResult<ApiResponseLog>> GetLogById(string id)
+        public async Task<ActionResult<ApiLogDetailDto>> GetLogById(string id)
         {
             try
             {
@@ -62,7 +66,8 @@ namespace InvoiceParser.Controllers
                 {
                     return NotFound(new { message = "API log not found" });
                 }
-                return Ok(log);
+                var dto = ApiLogMapper.ToDetailDto(log);
+                return Ok(dto);
             }
             catch (Exception ex)
             {

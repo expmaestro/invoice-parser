@@ -1,0 +1,191 @@
+<div class="api-logs-container">
+  <div class="logs-header">
+    <h2>API Request History</h2>
+    <div class="filters">
+      <div class="filter-group">
+        <label for="provider">Provider:</label>
+        <select id="provider" [(ngModel)]="selectedProvider" (change)="onProviderChange()">
+          <option value="all">All Providers</option>
+          <option value="gemini">Gemini</option>
+          <option value="azure">Azure</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="limit">Show:</label>
+        <select id="limit" [(ngModel)]="limit" (change)="onLimitChange()">
+          <option value="10">10 records</option>
+          <option value="20">20 records</option>
+          <option value="50">50 records</option>
+          <option value="100">100 records</option>
+        </select>
+      </div>
+      <button class="refresh-btn" (click)="loadLogs()" [disabled]="isLoading">
+        <span *ngIf="isLoading">Loading...</span>
+        <span *ngIf="!isLoading">Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="logs-table-container" *ngIf="!isLoading && logs.length > 0">
+    <table class="logs-table">
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Provider</th>
+          <th>Model</th>
+          <th>Status</th>
+          <th>Duration</th>
+          <th>File Size</th>
+          <th>Tokens</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let log of logs" [class.error-row]="!log.success">
+          <td class="timestamp">{{ formatTimestamp(log.timestamp) }}</td>
+          <td class="provider">
+            <span class="provider-badge" [class]="log.apiProvider">
+              {{ log.apiProvider | titlecase }}
+            </span>
+          </td>
+          <td class="model">{{ log.modelVersion || 'N/A' }}</td>
+          <td class="status">
+            <span class="status-badge" [class.success]="log.success" [class.error]="!log.success">
+              {{ log.success ? 'Success' : 'Error' }}
+            </span>
+          </td>
+          <td class="duration">{{ formatDuration(log.processingTimeMs) }}</td>
+          <td class="file-size">{{ formatFileSize(log.fileSize) }}</td>
+          <td class="tokens">
+            <span *ngIf="log.usageMetadata?.totalTokenCount">
+              {{ log.usageMetadata?.totalTokenCount | number }}
+            </span>
+            <span *ngIf="!log.usageMetadata?.totalTokenCount">N/A</span>
+          </td>
+          <td class="actions">
+            <button class="btn-small" (click)="viewDetails(log)">Details</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="loading" *ngIf="isLoading">
+    <p>Loading API logs...</p>
+  </div>
+
+  <div class="no-data" *ngIf="!isLoading && logs.length === 0">
+    <p>No API logs found. Upload an invoice to see request history.</p>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" *ngIf="showDetails" (click)="closeDetails()">
+  <div class="modal-content" (click)="$event.stopPropagation()" *ngIf="selectedLog">
+    <div class="modal-header">
+      <h3>API Request Details</h3>
+      <button class="close-btn" (click)="closeDetails()">&times;</button>
+    </div>
+    
+    <div class="modal-body">
+      <div class="detail-section">
+        <h4>Basic Information</h4>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Request ID:</label>
+            <span class="copyable" (click)="copyToClipboard(selectedLog.requestId, 'Request ID')">
+              {{ selectedLog.requestId }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Timestamp:</label>
+            <span>{{ formatTimestamp(selectedLog.timestamp) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Provider:</label>
+            <span class="provider-badge" [class]="selectedLog.apiProvider">
+              {{ selectedLog.apiProvider | titlecase }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Model Version:</label>
+            <span>{{ selectedLog.modelVersion || 'N/A' }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Status:</label>
+            <span class="status-badge" [class.success]="selectedLog.success" [class.error]="!selectedLog.success">
+              {{ selectedLog.success ? 'Success' : 'Error' }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <label>Processing Time:</label>
+            <span>{{ formatDuration(selectedLog.processingTimeMs) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedLog.fileSize">
+        <h4>File Information</h4>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>File Size:</label>
+            <span>{{ formatFileSize(selectedLog.fileSize) }}</span>
+          </div>
+          <div class="detail-item">
+            <label>MIME Type:</label>
+            <span>{{ selectedLog.imageMimeType || 'N/A' }}</span>
+          </div>
+        </div>
+        <div class="image-preview" *ngIf="selectedLog.imageMimeType">
+          <label>Uploaded Image:</label>
+          <img [src]="getImageUrl(selectedLog.id)" alt="Uploaded image" class="preview-img">
+        </div>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedLog.usageMetadata">
+        <h4>Usage Metadata</h4>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <label>Total Tokens:</label>
+            <span>{{ selectedLog.usageMetadata.totalTokenCount | number }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Prompt Tokens:</label>
+            <span>{{ selectedLog.usageMetadata.promptTokenCount | number }}</span>
+          </div>
+          <div class="detail-item">
+            <label>Response Tokens:</label>
+            <span>{{ selectedLog.usageMetadata.candidatesTokenCount | number }}</span>
+          </div>
+          <div class="detail-item" *ngIf="selectedLog.usageMetadata.thoughtsTokenCount">
+            <label>Thoughts Tokens:</label>
+            <span>{{ selectedLog.usageMetadata.thoughtsTokenCount | number }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="detail-section" *ngIf="selectedLog.errorMessage">
+        <h4>Error Details</h4>
+        <div class="error-message">
+          <pre>{{ selectedLog.errorMessage }}</pre>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h4>Raw Data</h4>
+        <div class="raw-data-actions">
+          <button class="btn-small" (click)="copyToClipboard(selectedLog.responseContent, 'Response')">
+            Copy Response
+          </button>
+          <button class="btn-small" (click)="downloadResponse()">
+            Download Response
+          </button>
+          <button class="btn-small" *ngIf="selectedLog.requestPayload" 
+                  (click)="copyToClipboard(selectedLog.requestPayload!, 'Request')">
+            Copy Request
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
