@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { ParsedInvoice } from '../models/invoice.model';
 
 export interface UsageMetadata {
   totalTokenCount: number;
@@ -34,6 +35,7 @@ export interface ApiResponseLogDetail extends ApiResponseLog {
   requestPayload?: string;
   responseContent: string;
   imageBase64?: string;
+  parsedInvoice?: ParsedInvoice;
 }
 
 @Injectable({

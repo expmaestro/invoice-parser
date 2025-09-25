@@ -171,6 +171,11 @@
         </div>
       </div>
 
+      <div class="detail-section" *ngIf="selectedLog.success">
+        <h4>Parsed Invoice Details</h4>
+        <app-invoice-details [parsedInvoice]="selectedLog.parsedInvoice ?? null"></app-invoice-details>
+      </div>
+
       <div class="detail-section">
         <h4>Raw Data</h4>
         <div class="raw-data-actions">

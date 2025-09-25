@@ -3,12 +3,13 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { InvoiceService } from '../services/invoice.service';
-import { ParsedInvoice, CurrencyField, CompanyContact, ShipmentDetails, ShipmentItem } from '../models/invoice.model';
+import { ParsedInvoice } from '../models/invoice.model';
+import { InvoiceDetailsComponent } from './invoice-details.component';
 
 @Component({
   selector: 'app-invoice-upload',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InvoiceDetailsComponent],
   styleUrls: ['./invoice-upload.component.scss'],
   templateUrl: './invoice-upload.component.html'
 })
@@ -23,11 +24,6 @@ export class InvoiceUploadComponent {
     private invoiceService: InvoiceService,
     private toastr: ToastrService
   ) {}
-
-  formatCurrency(field?: CurrencyField): string {
-    if (!field) return '';
-    return `${field.currencySymbol || '$'}${field.amount.toFixed(2)}`;
-  }
 
   onFileSelected(event: any) {
     const file = event.target.files[0];

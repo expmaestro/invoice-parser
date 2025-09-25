@@ -1,0 +1,197 @@
+<div *ngIf="displayInvoice" class="results-section">
+  <h3>Parsed Invoice Details</h3>
+  <div class="invoice-details">
+    <!-- Basic Invoice Information -->
+    <div class="section">
+      <h4>Invoice Information</h4>
+      <p *ngIf="displayInvoice.service">
+        <strong>Service:</strong> 
+        {{displayInvoice.service}}
+      </p>
+      <p *ngIf="displayInvoice.freightBillNo">
+        <strong>Freight Bill No:</strong> 
+        {{displayInvoice.freightBillNo}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDate">
+        <strong>Shipment Date:</strong> 
+        {{displayInvoice.shipmentDate}}
+      </p>
+      <p *ngIf="displayInvoice.amountDue">
+        <strong>Amount Due:</strong> 
+        {{formatCurrency(displayInvoice.amountDue)}}
+      </p>
+      <p *ngIf="displayInvoice.paymentDueDate">
+        <strong>Payment Due Date:</strong> 
+        {{displayInvoice.paymentDueDate}}
+      </p>
+      <p *ngIf="displayInvoice.fedTaxId">
+        <strong>FED TAX ID:</strong> 
+        {{displayInvoice.fedTaxId}}
+      </p>
+    </div>
+
+    <!-- Remit Payment To -->
+    <div *ngIf="displayInvoice.remitTo" class="section">
+      <h4>Remit Payment To</h4>
+      <div class="company-info">
+        <p *ngIf="displayInvoice.remitTo.name">
+          <strong>Company:</strong> {{displayInvoice.remitTo.name}}
+        </p>
+        <ng-container *ngIf="displayInvoice.remitTo.address">
+          <div *ngIf="displayInvoice.remitTo.address.fullAddress" class="address">
+            <p><strong>Address:</strong> {{displayInvoice.remitTo.address.fullAddress}}</p>
+          </div>
+        </ng-container>
+        <p *ngIf="displayInvoice.remitTo.phone">
+          <strong>Phone:</strong> {{displayInvoice.remitTo.phone}}
+        </p>
+        <p *ngIf="displayInvoice.remitTo.fax">
+          <strong>Fax:</strong> {{displayInvoice.remitTo.fax}}
+        </p>
+        <p *ngIf="displayInvoice.remitTo.email">
+          <strong>Email:</strong> {{displayInvoice.remitTo.email}}
+        </p>
+        <p *ngIf="displayInvoice.remitTo.website">
+          <strong>Website:</strong> {{displayInvoice.remitTo.website}}
+        </p>
+        <p *ngIf="displayInvoice.remitTo.accountNumber">
+          <strong>Account No:</strong> {{displayInvoice.remitTo.accountNumber}}
+        </p>
+      </div>
+    </div>
+
+    <!-- Bill To Information -->
+    <div *ngIf="displayInvoice.billTo" class="section">
+      <h4>Bill To Information</h4>
+      <div class="company-info">
+        <p *ngIf="displayInvoice.billTo.name">
+          <strong>Company:</strong> {{displayInvoice.billTo.name}}
+        </p>
+        <ng-container *ngIf="displayInvoice.billTo.address">
+          <div *ngIf="displayInvoice.billTo.address.fullAddress" class="address">
+            <p><strong>Address:</strong> {{displayInvoice.billTo.address.fullAddress}}</p>
+          </div>
+        </ng-container>
+        <p *ngIf="displayInvoice.billTo.phone">
+          <strong>Phone:</strong> {{displayInvoice.billTo.phone}}
+        </p>
+        <p *ngIf="displayInvoice.billTo.accountNumber">
+          <strong>Account No:</strong> {{displayInvoice.billTo.accountNumber}}
+        </p>
+      </div>
+    </div>
+
+    <!-- Shipment Details -->
+    <div *ngIf="displayInvoice.shipmentDetails" class="section">
+      <h4>Shipment Details</h4>
+      <p *ngIf="displayInvoice.shipmentDetails.service">
+        <strong>Service:</strong> {{displayInvoice.shipmentDetails.service}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDetails.shipmentDate">
+        <strong>Shipment Date:</strong> {{displayInvoice.shipmentDetails.shipmentDate}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDetails.poNumber">
+        <strong>P.O. Number:</strong> {{displayInvoice.shipmentDetails.poNumber}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDetails.billOfLading">
+        <strong>Bill of Lading:</strong> {{displayInvoice.shipmentDetails.billOfLading}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDetails.tariff">
+        <strong>Tariff:</strong> {{displayInvoice.shipmentDetails.tariff}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDetails.paymentTerms">
+        <strong>Payment Terms:</strong> {{displayInvoice.shipmentDetails.paymentTerms}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDetails.totalPieces !== undefined">
+        <strong>Total Pieces:</strong> {{displayInvoice.shipmentDetails.totalPieces}}
+      </p>
+      <p *ngIf="displayInvoice.shipmentDetails.totalWeight">
+        <strong>Total Weight:</strong> {{displayInvoice.shipmentDetails.totalWeight}} lbs
+      </p>
+    </div>
+
+    <!-- Shipper Information -->
+    <div *ngIf="displayInvoice.shipper" class="section">
+      <h4>Shipper Information</h4>
+      <div class="company-info">
+        <p *ngIf="displayInvoice.shipper.accountNumber">
+          <strong>Account No:</strong> {{displayInvoice.shipper.accountNumber}}
+        </p>
+        <p *ngIf="displayInvoice.shipper.name">
+          <strong>Name:</strong> {{displayInvoice.shipper.name}}
+        </p>
+        <ng-container *ngIf="displayInvoice.shipper.address">
+          <div *ngIf="displayInvoice.shipper.address.fullAddress" class="address">
+            <p><strong>Address:</strong> {{displayInvoice.shipper.address.fullAddress}}</p>
+          </div>
+        </ng-container>
+        <p *ngIf="displayInvoice.shipper.phone">
+          <strong>Phone:</strong> {{displayInvoice.shipper.phone}}
+        </p>
+      </div>
+    </div>
+
+    <!-- Consignee Information -->
+    <div *ngIf="displayInvoice.consignee" class="section">
+      <h4>Consignee Information</h4>
+      <div class="company-info">
+        <p *ngIf="displayInvoice.consignee.accountNumber">
+          <strong>Account No:</strong> {{displayInvoice.consignee.accountNumber}}
+        </p>
+        <p *ngIf="displayInvoice.consignee.name">
+          <strong>Name:</strong> {{displayInvoice.consignee.name}}
+        </p>
+        <ng-container *ngIf="displayInvoice.consignee.address">
+          <div *ngIf="displayInvoice.consignee.address.fullAddress" class="address">
+            <p><strong>Address:</strong> {{displayInvoice.consignee.address.fullAddress}}</p>
+          </div>
+        </ng-container>
+        <p *ngIf="displayInvoice.consignee.phone">
+          <strong>Phone:</strong> {{displayInvoice.consignee.phone}}
+        </p>
+      </div>
+    </div>
+
+    <!-- Line Items -->
+    <div *ngIf="displayInvoice.items?.length" class="section">
+      <h4>Line Items</h4>
+      <div class="line-items">
+        <table>
+          <thead>
+            <tr>
+              <th>Pieces</th>
+              <th>Description</th>
+              <th>Weight (lbs)</th>
+              <th>Class</th>
+              <th>Rate</th>
+              <th>Charge</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of displayInvoice.items">
+              <td>{{item.pieces}}</td>
+              <td>{{item.description}}</td>
+              <td>{{item.weight}}</td>
+              <td>{{item.class}}</td>
+              <td>{{item.rate}}</td>
+              <td>{{formatCurrency(item.charge)}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Totals -->
+    <div class="section totals">
+      <p *ngIf="displayInvoice.subTotal">
+        <strong>Subtotal:</strong> {{formatCurrency(displayInvoice.subTotal)}}
+      </p>
+      <p *ngIf="displayInvoice.totalTax">
+        <strong>Tax:</strong> {{formatCurrency(displayInvoice.totalTax)}}
+      </p>
+      <p *ngIf="displayInvoice.invoiceTotal">
+        <strong>Total:</strong> {{formatCurrency(displayInvoice.invoiceTotal)}}
+      </p>
+    </div>
+  </div>
+</div>

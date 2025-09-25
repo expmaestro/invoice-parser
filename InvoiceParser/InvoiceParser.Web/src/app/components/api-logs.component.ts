@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiLogService, ApiResponseLog, ApiResponseLogDetail } from '../services/api-log.service';
 import { ToastrService } from 'ngx-toastr';
+import { InvoiceDetailsComponent } from './invoice-details.component';
 
 @Component({
   selector: 'app-api-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InvoiceDetailsComponent],
   styleUrls: ['./api-logs.component.scss'],
   templateUrl: './api-logs.component.html'
 })
@@ -17,7 +18,7 @@ export class ApiLogsComponent implements OnInit {
   selectedProvider: 'all' | 'gemini' | 'azure' = 'all';
   selectedLog: ApiResponseLogDetail | null = null;
   showDetails = false;
-  limit = 20;
+  limit = 10;
 
   constructor(
     private apiLogService: ApiLogService,
