@@ -83,14 +83,14 @@ export interface CurrencyField {
 }
 
 export interface UsageMetadata {
-    promptTokenCount: number;
-    candidatesTokenCount: number;
-    totalTokenCount: number;
-    promptTokensDetails?: PromptTokenDetail[];
-    thoughtsTokenCount?: number;
+  totalTokenCount: number;
+  promptTokenCount: number;
+  candidatesTokenCount: number;
+  thoughtsTokenCount?: number;
+  promptTokensDetails?: PromptTokenDetail[];
 }
 
 export interface PromptTokenDetail {
-    modality?: string;
-    tokenCount: number;
+  modality: string;
+  tokenCount: number;
 }

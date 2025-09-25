@@ -1,42 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ParsedInvoice } from '../models/invoice.model';
-
-export interface UsageMetadata {
-  totalTokenCount: number;
-  promptTokenCount: number;
-  candidatesTokenCount: number;
-  thoughtsTokenCount?: number;
-  promptTokensDetails?: PromptTokenDetail[];
-}
-
-export interface PromptTokenDetail {
-  modality: string;
-  tokenCount: number;
-}
-
-export interface ApiResponseLog {
-  id: string;
-  requestId: string;
-  timestamp: string;
-  apiProvider: string;
-  modelVersion?: string;
-  processingTimeMs: number;
-  success: boolean;
-  errorMessage?: string;
-  fileName?: string;
-  fileSize?: number;
-  imageMimeType?: string;
-  usageMetadata?: UsageMetadata;
-}
-
-export interface ApiResponseLogDetail extends ApiResponseLog {
-  requestPayload?: string;
-  responseContent: string;
-  imageBase64?: string;
-  parsedInvoice?: ParsedInvoice;
-}
+import { ApiResponseLog, ApiResponseLogDetail } from '../models';
 
 @Injectable({
   providedIn: 'root'

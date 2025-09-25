@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ApiLogService, ApiResponseLog, ApiResponseLogDetail } from '../services/api-log.service';
+import { ApiLogService } from '../services/api-log.service';
+import { ApiResponseLog, ApiResponseLogDetail } from '../models';
 import { ToastrService } from 'ngx-toastr';
 import { InvoiceDetailsComponent } from './invoice-details.component';
 

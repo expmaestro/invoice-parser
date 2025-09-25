@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { InvoiceService } from '../services/invoice.service';
-import { ParsedInvoice } from '../models/invoice.model';
+import { ParsedInvoice } from '../models';
 import { InvoiceDetailsComponent } from './invoice-details.component';
 
 @Component({

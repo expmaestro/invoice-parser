@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ParsedInvoice, CurrencyField } from '../models/invoice.model';
+import { ParsedInvoice, CurrencyField } from '../models';
 
 @Component({
   selector: 'app-invoice-details',
