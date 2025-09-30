@@ -1,3 +1,6 @@
+using System.Text.Json.Serialization;
+using InvoiceParser.Services;
+
 namespace InvoiceParser.Models
 {
     public class Address
@@ -88,7 +91,7 @@ namespace InvoiceParser.Models
     public class CurrencyField
     {
         public string? CurrencySymbol { get; set; }
-        public decimal Amount { get; set; }
+        public decimal? Amount { get; set; }
     }
 
     public class UsageMetadata

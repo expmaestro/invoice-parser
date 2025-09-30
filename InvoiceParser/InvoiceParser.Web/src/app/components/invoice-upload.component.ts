@@ -18,7 +18,7 @@ export class InvoiceUploadComponent {
   isLoading = false;
   parsedInvoice: ParsedInvoice | null = null;
   imagePreviewUrl: string | null = null;
-  selectedParser: 'azure' | 'gemini' = 'gemini';
+  selectedParser: 'azure' | 'gemini' | 'openai' = 'gemini';
 
   constructor(
     private invoiceService: InvoiceService,

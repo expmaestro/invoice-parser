@@ -12,7 +12,12 @@ builder.Services.AddCors(options =>
             .AllowAnyHeader());
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new FlexibleDecimalConverter());
+        options.JsonSerializerOptions.Converters.Add(new FlexibleIntConverter());
+    });
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
@@ -22,8 +27,14 @@ builder.Services.AddHttpClient("Gemini", client =>
     client.BaseAddress = new Uri("https://generativelanguage.googleapis.com/");
 });
 
+builder.Services.AddHttpClient("OpenAI", client =>
+{
+    client.BaseAddress = new Uri("https://api.openai.com/");
+});
+
 builder.Services.AddScoped<IInvoiceParserService, InvoiceParserService>();
 builder.Services.AddScoped<IGeminiParserService, GeminiParserService>();
+builder.Services.AddScoped<IOpenAIParserService, OpenAIParserService>();
 builder.Services.AddScoped<IApiResponseLogService, ApiResponseLogService>();
 
 var app = builder.Build();

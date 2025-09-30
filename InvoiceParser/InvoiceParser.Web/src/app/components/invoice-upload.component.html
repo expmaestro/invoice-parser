@@ -11,6 +11,10 @@
           <input type="radio" name="parser" [value]="'gemini'" [(ngModel)]="selectedParser">
           Google Gemini
         </label>
+        <label>
+          <input type="radio" name="parser" [value]="'openai'" [(ngModel)]="selectedParser">
+          OpenAI GPT-4 Vision
+        </label>
       </div>
       <input type="file" 
              accept="image/*" 

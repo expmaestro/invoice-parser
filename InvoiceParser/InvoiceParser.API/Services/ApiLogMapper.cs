@@ -55,58 +55,7 @@ namespace InvoiceParser.Services
 
         private static ParsedInvoice? ExtractParsedInvoice(string? responseContent)
         {
-            if (string.IsNullOrEmpty(responseContent)) return null;
-
-            try
-            {
-                // First, try to parse the response as Gemini API response structure
-                var geminiResponse = JsonSerializer.Deserialize<JsonDocument>(responseContent);
-                
-                if (geminiResponse?.RootElement.TryGetProperty("candidates", out var candidatesElement) == true &&
-                    candidatesElement.ValueKind == JsonValueKind.Array &&
-                    candidatesElement.GetArrayLength() > 0)
-                {
-                    var firstCandidate = candidatesElement[0];
-                    if (firstCandidate.TryGetProperty("content", out var contentElement) &&
-                        contentElement.TryGetProperty("parts", out var partsElement) &&
-                        partsElement.ValueKind == JsonValueKind.Array &&
-                        partsElement.GetArrayLength() > 0)
-                    {
-                        var firstPart = partsElement[0];
-                        if (firstPart.TryGetProperty("text", out var textElement))
-                        {
-                            var textContent = textElement.GetString();
-                            if (!string.IsNullOrEmpty(textContent))
-                            {
-                                // Extract JSON from the text content (same logic as in GeminiParserService)
-                                var jsonStart = textContent.IndexOf('{');
-                                var jsonEnd = textContent.LastIndexOf('}');
-                                
-                                if (jsonStart != -1 && jsonEnd != -1 && jsonEnd > jsonStart)
-                                {
-                                    var jsonResponse = textContent.Substring(jsonStart, jsonEnd - jsonStart + 1);
-                                    
-                                    // Parse the extracted JSON as invoice data
-                                    var options = new JsonSerializerOptions 
-                                    { 
-                                        PropertyNameCaseInsensitive = true
-                                    };
-                                    
-                                    return JsonSerializer.Deserialize<ParsedInvoice>(jsonResponse, options);
-                                }
-                            }
-                        }
-                    }
-                }
-                
-                return null;
-            }
-            catch (Exception ex)
-            {
-                // Log error but don't fail the mapping
-                Console.WriteLine($"Failed to extract parsed invoice from response: {ex.Message}");
-                return null;
-            }
+            return AiResponseParser.ExtractParsedInvoice(responseContent);
         }
 
         private static UsageMetadataDto? MapUsageMetadata(BsonDocument? usageMetadata)

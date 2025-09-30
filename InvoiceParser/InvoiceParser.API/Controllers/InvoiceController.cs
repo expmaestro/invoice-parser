@@ -10,14 +10,17 @@ namespace InvoiceParser.Controllers
     {
         private readonly IInvoiceParserService _azureParser;
         private readonly IGeminiParserService _geminiParser;
+        private readonly IOpenAIParserService _openAIParser;
 
         public InvoiceController(
             IInvoiceParserService azureParser, 
-            IGeminiParserService geminiParser
+            IGeminiParserService geminiParser,
+            IOpenAIParserService openAIParser
             )
         {
             _azureParser = azureParser;
             _geminiParser = geminiParser;
+            _openAIParser = openAIParser;
         }
 
         [HttpPost("parse")]
@@ -35,8 +38,9 @@ namespace InvoiceParser.Controllers
                 var result = parser.ToLower() switch
                 {
                     "gemini" => await _geminiParser.ParseInvoiceImageAsync(stream),
+                    "openai" => await _openAIParser.ParseInvoiceImageAsync(stream),
                     "azure" => await _azureParser.ParseInvoiceImageAsync(stream),
-                    _ => throw new ArgumentException("Invalid parser specified. Use 'azure' or 'gemini'")
+                    _ => throw new ArgumentException("Invalid parser specified. Use 'azure', 'gemini', or 'openai'")
                 };
                 return Ok(result);
             }

@@ -12,7 +12,7 @@ export class InvoiceService {
 
   constructor(private http: HttpClient) { }
 
-  parseInvoice(file: File, parser: 'azure' | 'gemini' = 'azure'): Observable<ParsedInvoice> {
+  parseInvoice(file: File, parser: 'azure' | 'gemini' | 'openai' = 'azure'): Observable<ParsedInvoice> {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<ParsedInvoice>(`${this.baseUrl}/invoice/parse?parser=${parser}`, formData);

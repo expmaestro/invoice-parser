@@ -2,7 +2,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using InvoiceParser.Api.Interfaces;
+using InvoiceParser.Constants;
 using InvoiceParser.Models;
+using Microsoft.Extensions.Logging;
 
 namespace InvoiceParser.Services
 {
@@ -12,13 +14,15 @@ namespace InvoiceParser.Services
         private readonly IConfiguration _configuration;
         private readonly HttpClient _httpClient;
         private readonly IApiResponseLogService _apiResponseLogService;
+        private readonly ILogger<GeminiParserService> _logger;
         private readonly string _apiKey;
 
-        public GeminiParserService(IConfiguration configuration, IHttpClientFactory httpClientFactory, IApiResponseLogService apiResponseLogService)
+        public GeminiParserService(IConfiguration configuration, IHttpClientFactory httpClientFactory, IApiResponseLogService apiResponseLogService, ILogger<GeminiParserService> logger)
         {
             _configuration = configuration;
             _httpClient = httpClientFactory.CreateClient("Gemini");
             _apiResponseLogService = apiResponseLogService;
+            _logger = logger;
             _apiKey = _configuration["Google:GeminiApiKey"] 
                 ?? throw new ArgumentNullException("Google:GeminiApiKey is not configured");
         }
@@ -29,6 +33,7 @@ namespace InvoiceParser.Services
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var requestId = Guid.NewGuid().ToString();
             string? requestPayload = null;
+            string? jsonResponse = null;
             
             try
             {
@@ -40,122 +45,7 @@ namespace InvoiceParser.Services
                 var imageSize = ms.Length;
                 var imageMimeType = GetImageMimeType(imageBytes);
 
-                var prompt = @"Analyze this logistics invoice image and extract the following information as structured JSON:
-
-                INVOICE INFORMATION:
-                - Service
-                - Freight Bill No
-                - Shipment Date
-                - Amount Due
-                - Payment Due Date
-                - FED TAX ID
-
-                REMIT TO INFORMATION:
-                - Company Name
-                - Address (full address as one string)
-                - Phone / Fax
-                - Email / Website
-                - Account No
-
-                BILL TO & PAYMENT DUE FROM:
-                - Company Name
-                - Address (full address as one string)
-                - Phone
-                - Account No
-
-                SHIPPER INFORMATION:
-                - Shipper Account #
-                - Shipper Name
-                - Shipper Address (full address as one string)
-                - Shipper Phone
-
-                CONSIGNEE INFORMATION:
-                - Consignee Account #
-                - Consignee Name
-                - Consignee Address (full address as one string)
-                - Consignee Phone
-
-                SHIPMENT DETAILS:
-                - P.O. Number
-                - Bill of Lading No
-                - Tariff
-                - Payment Terms
-                - Total Pieces
-                - Total Weight
-
-                LINE ITEMS (extract each piece/line item):
-                - Number of pieces
-                - Description
-                - Weight (lbs)
-                - Class
-                - Rate
-                - Charge
-
-                TOTALS:
-                - Subtotal
-                - Tax amount
-                - Total Amount
-
-                Format as JSON with this exact structure:
-                {
-                    ""service"": ""string"",
-                    ""freightBillNo"": ""string"",
-                    ""shipmentDate"": ""string"",
-                    ""amountDue"": { ""currencySymbol"": ""$"", ""amount"": 0.00 },
-                    ""paymentDueDate"": ""string"",
-                    ""fedTaxId"": ""string"",
-                    ""remitTo"": {
-                        ""name"": ""string"",
-                        ""address"": { ""fullAddress"": ""string"" },
-                        ""phone"": ""string"",
-                        ""fax"": ""string"",
-                        ""email"": ""string"",
-                        ""website"": ""string"",
-                        ""accountNumber"": ""string""
-                    },
-                    ""billTo"": {
-                        ""name"": ""string"",
-                        ""address"": { ""fullAddress"": ""string"" },
-                        ""phone"": ""string"",
-                        ""accountNumber"": ""string""
-                    },
-                    ""shipper"": {
-                        ""accountNumber"": ""string"",
-                        ""name"": ""string"",
-                        ""address"": { ""fullAddress"": ""string"" },
-                        ""phone"": ""string""
-                    },
-                    ""consignee"": {
-                        ""accountNumber"": ""string"",
-                        ""name"": ""string"",
-                        ""address"": { ""fullAddress"": ""string"" },
-                        ""phone"": ""string""
-                    },
-                    ""shipmentDetails"": {
-                        ""service"": ""string"",
-                        ""shipmentDate"": ""string"",
-                        ""poNumber"": ""string"",
-                        ""billOfLading"": ""string"",
-                        ""tariff"": ""string"",
-                        ""paymentTerms"": ""string"",
-                        ""totalPieces"": 0,
-                        ""totalWeight"": 0.00
-                    },
-                    ""items"": [
-                        {
-                            ""pieces"": 0,
-                            ""description"": ""string"",
-                            ""weight"": 0.00,
-                            ""class"": ""string"",
-                            ""rate"": 0.00,
-                            ""charge"": { ""currencySymbol"": ""$"", ""amount"": 0.00 }
-                        }
-                    ],
-                    ""subTotal"": { ""currencySymbol"": ""$"", ""amount"": 0.00 },
-                    ""totalTax"": { ""currencySymbol"": ""$"", ""amount"": 0.00 },
-                    ""invoiceTotal"": { ""currencySymbol"": ""$"", ""amount"": 0.00 }
-                }";
-
+                var prompt = PromptConstants.InvoiceParsingPrompt;
 
                 var requestBody = new
                 {
@@ -262,29 +152,33 @@ namespace InvoiceParser.Services
                     }
                 });
 
-                // Extract the JSON response from the Gemini text output
-                var jsonStart = geminiResponse?.Candidates?[0]?.Content?.Parts?[0]?.Text?.IndexOf('{') ?? -1;
-                var jsonEnd = geminiResponse?.Candidates?[0]?.Content?.Parts?[0]?.Text?.LastIndexOf('}') ?? -1;
+                // Extract the JSON response using shared utility
+                var textContent = geminiResponse?.Candidates?[0]?.Content?.Parts?[0]?.Text;
+                if (string.IsNullOrEmpty(textContent))
+                {
+                    throw new Exception("No text content found in Gemini response");
+                }
+
+                // Extract JSON from the text content using shared logic
+                var jsonStart = textContent.IndexOf('{');
+                var jsonEnd = textContent.LastIndexOf('}');
 
                 if (jsonStart == -1 || jsonEnd == -1)
                 {
                     throw new Exception("Could not find valid JSON in Gemini response");
                 }
 
-                var jsonResponse = geminiResponse.Candidates[0].Content.Parts[0].Text
-                    .Substring(jsonStart, jsonEnd - jsonStart + 1);
+                jsonResponse = textContent.Substring(jsonStart, jsonEnd - jsonStart + 1);
 
-                // Parse the JSON response into our model
-                var options = new JsonSerializerOptions 
-                { 
-                    PropertyNameCaseInsensitive = true,
-                    Converters = { 
-                        new FlexibleDecimalConverter(),
-                        new FlexibleIntConverter()
-                    }
-                };
-                
-                var parsedInvoice = JsonSerializer.Deserialize<ParsedInvoice>(jsonResponse, options);
+                // Log the generated JSON for debugging
+                _logger.LogInformation("Generated JSON from Gemini: {Json}", jsonResponse);
+
+                // Parse the JSON response using shared utility
+                var parsedInvoice = AiResponseParser.ParseInvoiceJson(jsonResponse);
+                if (parsedInvoice == null)
+                {
+                    throw new Exception("Failed to parse Gemini JSON response");
+                }
 
                 // Add metadata from Gemini response
                 if (geminiResponse?.UsageMetadata != null)
@@ -306,6 +200,40 @@ namespace InvoiceParser.Services
                 parsedInvoice.ModelVersion = geminiResponse?.ModelVersion;
 
                 return parsedInvoice;
+            }
+            catch (JsonException jsonEx)
+            {
+                _logger.LogError(jsonEx, "JSON parsing error in Gemini response. JSON: {Json}", jsonResponse ?? "null");
+                
+                stopwatch?.Stop();
+                
+                // Save failed API response to MongoDB
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        var apiResponseLog = new ApiResponseLog
+                        {
+                            RequestId = requestId,
+                            Timestamp = startTime,
+                            ApiProvider = "gemini",
+                            RequestPayload = requestPayload,
+                            ResponseContent = jsonEx.Message,
+                            ProcessingTimeMs = stopwatch?.ElapsedMilliseconds ?? 0,
+                            Success = false,
+                            ErrorMessage = jsonEx.ToString()
+                        };
+
+                        await _apiResponseLogService.SaveApiResponseAsync(apiResponseLog);
+                    }
+                    catch (Exception logEx)
+                    {
+                        // Log error but don't fail the main request
+                        Console.WriteLine($"Failed to save failed API response to MongoDB: {logEx.Message}");
+                    }
+                });
+
+                throw new Exception($"Invalid JSON response from Gemini: {jsonEx.Message}", jsonEx);
             }
             catch (Exception ex)
             {
@@ -482,68 +410,6 @@ namespace InvoiceParser.Services
 
             [JsonPropertyName("tokenCount")]
             public int TokenCount { get; set; }
-        }
-    }
-
-    public class FlexibleDecimalConverter : JsonConverter<decimal?>
-    {
-        public override decimal? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            switch (reader.TokenType)
-            {
-                case JsonTokenType.Number:
-                    return reader.GetDecimal();
-                case JsonTokenType.String:
-                    var stringValue = reader.GetString();
-                    if (string.IsNullOrWhiteSpace(stringValue))
-                        return null;
-                    if (decimal.TryParse(stringValue, out decimal result))
-                        return result;
-                    return null;
-                case JsonTokenType.Null:
-                    return null;
-                default:
-                    return null;
-            }
-        }
-
-        public override void Write(Utf8JsonWriter writer, decimal? value, JsonSerializerOptions options)
-        {
-            if (value.HasValue)
-                writer.WriteNumberValue(value.Value);
-            else
-                writer.WriteNullValue();
-        }
-    }
-
-    public class FlexibleIntConverter : JsonConverter<int?>
-    {
-        public override int? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
-        {
-            switch (reader.TokenType)
-            {
-                case JsonTokenType.Number:
-                    return reader.GetInt32();
-                case JsonTokenType.String:
-                    var stringValue = reader.GetString();
-                    if (string.IsNullOrWhiteSpace(stringValue))
-                        return null;
-                    if (int.TryParse(stringValue, out int result))
-                        return result;
-                    return null;
-                case JsonTokenType.Null:
-                    return null;
-                default:
-                    return null;
-            }
-        }
-
-        public override void Write(Utf8JsonWriter writer, int? value, JsonSerializerOptions options)
-        {
-            if (value.HasValue)
-                writer.WriteNumberValue(value.Value);
-            else
-                writer.WriteNullValue();
         }
     }
 }
