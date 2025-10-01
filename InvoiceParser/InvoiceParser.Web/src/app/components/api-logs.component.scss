@@ -68,6 +68,17 @@
     position: sticky;
     top: 0;
     z-index: 10;
+    white-space: nowrap;
+    
+    &:nth-child(7) { // Tokens column
+      text-align: right;
+      width: 60px;
+    }
+    
+    &:nth-child(8) { // Actions column
+      text-align: center;
+      width: 180px;
+    }
   }
 
   td {
@@ -158,17 +169,23 @@
     font-family: monospace;
     font-size: 0.85rem;
     text-align: right;
+    width: 80px;
   }
 
   .actions {
     display: flex;
-    gap: 8px;
-    justify-content: flex-end;
+    gap: 4px;
+    justify-content: center;
+    align-items: center;
+    width: 160px;
     
     button {
       display: flex;
       align-items: center;
       gap: 4px;
+      font-size: 0.8rem;
+      padding: 4px 8px;
+      min-width: auto;
       
       mat-icon {
         font-size: 16px;
@@ -381,7 +398,15 @@
   }
 
   .logs-table {
-    min-width: 700px;
+    min-width: 800px;
+    
+    .actions {
+      button {
+        span:not(.mat-icon) {
+          display: none; // Hide button text on mobile, show only icons
+        }
+      }
+    }
   }
 
   .modal-content {
