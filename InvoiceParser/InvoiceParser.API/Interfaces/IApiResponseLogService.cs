@@ -8,5 +8,7 @@ namespace InvoiceParser.Api.Interfaces
         Task<ApiResponseLog?> GetApiResponseAsync(string id);
         Task<List<ApiResponseLog>> GetApiResponsesByProviderAsync(string provider, int limit = 100);
         Task<List<ApiResponseLog>> GetRecentApiResponsesAsync(int limit = 50);
+        Task<bool> DeleteApiResponseAsync(string id);
+        Task<int> DeleteAllApiResponsesAsync();
     }
 }

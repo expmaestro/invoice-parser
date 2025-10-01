@@ -27,4 +27,12 @@ export class ApiLogService {
   getLogImage(id: string): string {
     return `${this.baseUrl}/apilogs/${id}/image`;
   }
+
+  deleteLog(id: string): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/apilogs/${id}`);
+  }
+
+  deleteAllLogs(): Observable<any> {
+    return this.http.delete(`${this.baseUrl}/apilogs/all`);
+  }
 }

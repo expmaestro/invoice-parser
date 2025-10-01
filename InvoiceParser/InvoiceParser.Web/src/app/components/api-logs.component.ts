@@ -1,15 +1,31 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatDialog } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatSelectModule } from '@angular/material/select';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiLogService } from '../services/api-log.service';
 import { ApiResponseLog, ApiResponseLogDetail } from '../models';
 import { ToastrService } from 'ngx-toastr';
 import { InvoiceDetailsComponent } from './invoice-details.component';
+import { DeleteConfirmationDialogComponent, DeleteConfirmationData } from './delete-confirmation-dialog.component';
 
 @Component({
   selector: 'app-api-logs',
   standalone: true,
-  imports: [CommonModule, FormsModule, InvoiceDetailsComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    MatButtonModule,
+    MatSelectModule,
+    MatFormFieldModule,
+    MatIconModule,
+    MatTooltipModule,
+    InvoiceDetailsComponent
+  ],
   styleUrls: ['./api-logs.component.scss'],
   templateUrl: './api-logs.component.html'
 })
@@ -23,7 +39,8 @@ export class ApiLogsComponent implements OnInit {
 
   constructor(
     private apiLogService: ApiLogService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -114,5 +131,61 @@ export class ApiLogsComponent implements OnInit {
     a.download = `api-response-${this.selectedLog.requestId}.json`;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  confirmDeleteLog(logId: string) {
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '400px',
+      data: { type: 'single' } as DeleteConfirmationData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.deleteSingleLog(logId);
+      }
+    });
+  }
+
+  confirmDeleteAll() {
+    const dialogRef = this.dialog.open(DeleteConfirmationDialogComponent, {
+      width: '400px',
+      data: { type: 'all', count: this.logs.length } as DeleteConfirmationData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.deleteAllLogs();
+      }
+    });
+  }
+
+  deleteSingleLog(logId: string) {
+    this.apiLogService.deleteLog(logId).subscribe({
+      next: (response) => {
+        this.toastr.success('Log deleted successfully', 'Success');
+        this.loadLogs();
+        if (this.selectedLog && this.selectedLog.id === logId) {
+          this.closeDetails();
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting log:', error);
+        this.toastr.error('Failed to delete log', 'Error');
+      }
+    });
+  }
+
+  deleteAllLogs() {
+    this.apiLogService.deleteAllLogs().subscribe({
+      next: (response) => {
+        this.toastr.success(`${response.deletedCount} logs deleted successfully`, 'Success');
+        this.loadLogs();
+        this.closeDetails();
+      },
+      error: (error) => {
+        console.error('Error deleting all logs:', error);
+        this.toastr.error('Failed to delete all logs', 'Error');
+      }
+    });
   }
 }

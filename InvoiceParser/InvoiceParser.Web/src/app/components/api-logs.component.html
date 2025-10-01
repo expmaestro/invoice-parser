@@ -2,26 +2,36 @@
   <div class="logs-header">
     <h2>API Request History</h2>
     <div class="filters">
-      <div class="filter-group">
-        <label for="provider">Provider:</label>
-        <select id="provider" [(ngModel)]="selectedProvider" (change)="onProviderChange()">
-          <option value="all">All Providers</option>
-          <option value="gemini">Gemini</option>
-          <option value="azure">Azure</option>
-        </select>
-      </div>
-      <div class="filter-group">
-        <label for="limit">Show:</label>
-        <select id="limit" [(ngModel)]="limit" (change)="onLimitChange()">
-          <option value="10">10 records</option>
-          <option value="20">20 records</option>
-          <option value="50">50 records</option>
-          <option value="100">100 records</option>
-        </select>
-      </div>
-      <button class="refresh-btn" (click)="loadLogs()" [disabled]="isLoading">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Provider</mat-label>
+        <mat-select [(ngModel)]="selectedProvider" (selectionChange)="onProviderChange()">
+          <mat-option value="all">All Providers</mat-option>
+          <mat-option value="gemini">Gemini</mat-option>
+          <mat-option value="azure">Azure</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Show</mat-label>
+        <mat-select [(ngModel)]="limit" (selectionChange)="onLimitChange()">
+          <mat-option value="10">10 records</mat-option>
+          <mat-option value="20">20 records</mat-option>
+          <mat-option value="50">50 records</mat-option>
+          <mat-option value="100">100 records</mat-option>
+        </mat-select>
+      </mat-form-field>
+      
+      <button mat-raised-button color="primary" (click)="loadLogs()" [disabled]="isLoading">
+        <mat-icon *ngIf="!isLoading">refresh</mat-icon>
         <span *ngIf="isLoading">Loading...</span>
         <span *ngIf="!isLoading">Refresh</span>
+      </button>
+      
+      <button mat-raised-button color="warn" (click)="confirmDeleteAll()" 
+              [disabled]="isLoading || logs.length === 0"
+              matTooltip="Delete all API logs">
+        <mat-icon>delete_sweep</mat-icon>
+        Clear All History
       </button>
     </div>
   </div>
@@ -63,7 +73,15 @@
             <span *ngIf="!log.usageMetadata?.totalTokenCount">N/A</span>
           </td>
           <td class="actions">
-            <button class="btn-small" (click)="viewDetails(log)">Details</button>
+            <button mat-button color="primary" (click)="viewDetails(log)">
+              <mat-icon>visibility</mat-icon>
+              Details
+            </button>
+            <button mat-button color="warn" (click)="confirmDeleteLog(log.id)" 
+                    matTooltip="Delete this log">
+              <mat-icon>delete</mat-icon>
+              Delete
+            </button>
           </td>
         </tr>
       </tbody>

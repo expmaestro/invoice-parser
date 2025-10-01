@@ -102,5 +102,43 @@ namespace InvoiceParser.Controllers
                 return StatusCode(500, new { message = $"Error retrieving image: {ex.Message}" });
             }
         }
+
+        /// <summary>
+        /// Delete a specific API response log by ID
+        /// </summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteLog(string id)
+        {
+            try
+            {
+                var deleted = await _apiResponseLogService.DeleteApiResponseAsync(id);
+                if (!deleted)
+                {
+                    return NotFound(new { message = "API log not found" });
+                }
+                return Ok(new { message = "API log deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error deleting API log: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Delete all API response logs
+        /// </summary>
+        [HttpDelete("all")]
+        public async Task<IActionResult> DeleteAllLogs()
+        {
+            try
+            {
+                var deletedCount = await _apiResponseLogService.DeleteAllApiResponsesAsync();
+                return Ok(new { message = $"Deleted {deletedCount} API logs successfully", deletedCount });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = $"Error deleting all API logs: {ex.Message}" });
+            }
+        }
     }
 }

@@ -5,3 +5,20 @@
 
 // ngx-toastr styles
 @import 'ngx-toastr/toastr';
+
+// Global styles
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  margin: 0;
+  height: 100%;
+}
+
+html {
+  height: 100%;
+}

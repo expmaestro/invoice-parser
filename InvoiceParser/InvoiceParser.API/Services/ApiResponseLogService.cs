@@ -85,6 +85,32 @@ namespace InvoiceParser.Services
             }
         }
 
+        public async Task<bool> DeleteApiResponseAsync(string id)
+        {
+            try
+            {
+                var result = await _apiResponsesCollection.DeleteOneAsync(x => x.Id == id);
+                return result.DeletedCount > 0;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error deleting API response from MongoDB: {ex.Message}", ex);
+            }
+        }
+
+        public async Task<int> DeleteAllApiResponsesAsync()
+        {
+            try
+            {
+                var result = await _apiResponsesCollection.DeleteManyAsync(_ => true);
+                return (int)result.DeletedCount;
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Error deleting all API responses from MongoDB: {ex.Message}", ex);
+            }
+        }
+
         private void CreateIndexes()
         {
             try
