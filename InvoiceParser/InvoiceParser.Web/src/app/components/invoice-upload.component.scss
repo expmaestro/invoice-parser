@@ -22,10 +22,8 @@
 /* Upload Section */
 .upload-section {
   flex: 1;
-  border: 2px dashed #ccc;
   padding: 15px;
   text-align: center;
-  border-radius: 4px;
 }
 
 .upload-section h2 {
@@ -90,46 +88,219 @@
 }
 
 .parser-selection {
-  margin-bottom: 15px;
-  display: flex;
-  justify-content: center;
-  gap: 15px;
+  margin-bottom: 20px;
+  
+  h3 {
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+    color: #333;
+    text-align: center;
+  }
+
+  mat-radio-group {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: center;
+      gap: 15px;
+    }
+  }
+
+  .parser-option {
+    margin: 8px 0;
+    
+    .parser-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.95rem;
+      
+      mat-icon {
+        font-size: 20px;
+        width: 20px;
+        height: 20px;
+      }
+    }
+  }
+
+  // Override Material Radio button styles
+  ::ng-deep .mat-mdc-radio-button {
+    .mdc-radio {
+      padding: 8px;
+    }
+    
+    .mdc-form-field {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  // Custom hover effect
+  ::ng-deep .mat-mdc-radio-button:hover {
+    .mdc-radio {
+      background-color: rgba(0, 0, 0, 0.04);
+      border-radius: 50%;
+    }
+  }
 }
 
-.parser-selection label {
+.file-upload-section {
+  margin: 20px 0;
+}
+
+.upload-area {
+  border: 2px dashed #ccc;
+  border-radius: 8px;
+  padding: 40px 20px;
+  text-align: center;
   cursor: pointer;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
   transition: all 0.3s ease;
-  font-size: 0.9rem;
+  background-color: #fafafa;
+  
+  &:hover {
+    border-color: #2196f3;
+    background-color: #f0f8ff;
+  }
+  
+  &.drag-over {
+    border-color: #4caf50;
+    background-color: #e8f5e8;
+    transform: scale(1.02);
+  }
+  
+  &.has-file {
+    border-color: #4caf50;
+    background-color: #f0fff0;
+    border-style: solid;
+  }
 }
 
-.parser-selection label:hover {
-  background-color: #f0f0f0;
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  
+  .upload-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #666;
+    margin-bottom: 10px;
+  }
+  
+  h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2rem;
+    font-weight: 500;
+  }
+  
+  p {
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+  }
+  
+  button {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+  }
 }
 
-.parser-selection input[type="radio"] {
-  margin-right: 8px;
+.file-selected {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 20px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    text-align: center;
+    gap: 15px;
+    
+    .file-info {
+      text-align: center;
+    }
+    
+    .file-actions {
+      justify-content: center;
+    }
+  }
+  
+  .file-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    color: #4caf50;
+  }
+  
+  .file-info {
+    flex: 1;
+    text-align: left;
+    
+    h4 {
+      margin: 0 0 5px 0;
+      color: #333;
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 0.9rem;
+    }
+  }
+  
+  .file-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    
+    button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
+  }
 }
 
+// Hide the old file input styles since we're not using them anymore
 input[type="file"] {
-  width: 100%;
-  height: 80px;
-  cursor: pointer;
-  border: none;
-  font-size: 0.9rem;
-}
-
-.drag-over {
-  background-color: #e1e1e1;
-  border-color: #999;
+  display: none;
 }
 
 .loading {
-  margin-top: 8px;
+  margin-top: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   color: #666;
   font-size: 0.9rem;
+  padding: 10px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  border-left: 4px solid #2196f3;
 }
 
 /* Image Preview */

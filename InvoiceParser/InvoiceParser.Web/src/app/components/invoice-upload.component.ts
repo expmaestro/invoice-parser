@@ -1,6 +1,11 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ToastrService } from 'ngx-toastr';
 import { InvoiceService } from '../services/invoice.service';
 import { ParsedInvoice } from '../models';
@@ -9,7 +14,16 @@ import { InvoiceDetailsComponent } from './invoice-details.component';
 @Component({
   selector: 'app-invoice-upload',
   standalone: true,
-  imports: [CommonModule, FormsModule, InvoiceDetailsComponent],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    MatRadioModule,
+    MatFormFieldModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    InvoiceDetailsComponent
+  ],
   styleUrls: ['./invoice-upload.component.scss'],
   templateUrl: './invoice-upload.component.html'
 })
@@ -19,6 +33,7 @@ export class InvoiceUploadComponent {
   parsedInvoice: ParsedInvoice | null = null;
   imagePreviewUrl: string | null = null;
   selectedParser: 'azure' | 'gemini' | 'openai' = 'gemini';
+  selectedFileName: string | null = null;
 
   constructor(
     private invoiceService: InvoiceService,
@@ -55,6 +70,9 @@ export class InvoiceUploadComponent {
       return;
     }
 
+    // Store the selected file name
+    this.selectedFileName = file.name;
+
     // Create image preview
     const reader = new FileReader();
     reader.onload = (e: any) => {
@@ -76,5 +94,11 @@ export class InvoiceUploadComponent {
         this.isLoading = false;
       }
     });
+  }
+
+  clearSelection() {
+    this.selectedFileName = null;
+    this.imagePreviewUrl = null;
+    this.parsedInvoice = null;
   }
 }

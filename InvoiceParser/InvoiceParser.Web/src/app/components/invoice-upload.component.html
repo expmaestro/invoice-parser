@@ -3,27 +3,79 @@
     <div class="upload-section">
       <h2>Upload Invoice</h2>
       <div class="parser-selection">
-        <label>
-          <input type="radio" name="parser" [value]="'azure'" [(ngModel)]="selectedParser">
-          Azure Document AI
-        </label>
-        <label>
-          <input type="radio" name="parser" [value]="'gemini'" [(ngModel)]="selectedParser">
-          Google Gemini
-        </label>
-        <label>
-          <input type="radio" name="parser" [value]="'openai'" [(ngModel)]="selectedParser">
-          OpenAI GPT-4 Vision
-        </label>
+        <h3>Select AI Parser</h3>
+        <mat-radio-group [(ngModel)]="selectedParser" name="parser">
+          <mat-radio-button value="azure" class="parser-option">
+            <span class="parser-label">
+              <mat-icon>cloud</mat-icon>
+              Azure Document AI
+            </span>
+          </mat-radio-button>
+          <mat-radio-button value="gemini" class="parser-option">
+            <span class="parser-label">
+              <mat-icon>psychology</mat-icon>
+              Google Gemini
+            </span>
+          </mat-radio-button>
+          <mat-radio-button value="openai" class="parser-option">
+            <span class="parser-label">
+              <mat-icon>smart_toy</mat-icon>
+              OpenAI GPT-4 Vision
+            </span>
+          </mat-radio-button>
+        </mat-radio-group>
       </div>
-      <input type="file" 
-             accept="image/*" 
-             (change)="onFileSelected($event)"
+      
+      <!-- File Upload Section -->
+      <div class="file-upload-section">
+        <input type="file" 
+               #fileInput
+               accept="image/*" 
+               (change)="onFileSelected($event)"
+               style="display: none;">
+        
+        <div class="upload-area" 
              [class.drag-over]="isDragging"
+             [class.has-file]="selectedFileName"
              (dragover)="onDragOver($event)"
              (dragleave)="isDragging = false"
-             (drop)="onDrop($event)">
-      <div *ngIf="isLoading" class="loading">Processing with {{selectedParser}}...</div>
+             (drop)="onDrop($event)"
+             (click)="fileInput.click()">
+          
+          <div class="upload-content" *ngIf="!selectedFileName">
+            <mat-icon class="upload-icon">cloud_upload</mat-icon>
+            <h3>Choose File or Drag & Drop</h3>
+            <p>Upload an invoice image (PNG, JPG, JPEG)</p>
+            <button mat-raised-button color="primary" type="button">
+              <mat-icon>attach_file</mat-icon>
+              Choose File
+            </button>
+          </div>
+          
+          <div class="file-selected" *ngIf="selectedFileName">
+            <mat-icon class="file-icon">description</mat-icon>
+            <div class="file-info">
+              <h4>{{ selectedFileName }}</h4>
+              <p>Click to change file or drag a new one</p>
+            </div>
+            <div class="file-actions">
+              <button mat-raised-button color="accent" type="button">
+                <mat-icon>edit</mat-icon>
+                Change File
+              </button>
+              <button mat-button color="warn" type="button" (click)="clearSelection(); $event.stopPropagation()">
+                <mat-icon>clear</mat-icon>
+                Clear
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div *ngIf="isLoading" class="loading">
+        <mat-spinner diameter="24"></mat-spinner>
+        <span>Processing with {{selectedParser}}...</span>
+      </div>
     </div>
 
     <!-- Processing Information -->
