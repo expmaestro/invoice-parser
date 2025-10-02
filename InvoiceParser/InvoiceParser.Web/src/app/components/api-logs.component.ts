@@ -7,11 +7,15 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatCardModule } from '@angular/material/card';
+import { MatTabsModule } from '@angular/material/tabs';
 import { ApiLogService } from '../services/api-log.service';
 import { ApiResponseLog, ApiResponseLogDetail } from '../models';
 import { ToastrService } from 'ngx-toastr';
 import { InvoiceDetailsComponent } from './invoice-details.component';
 import { DeleteConfirmationDialogComponent, DeleteConfirmationData } from './delete-confirmation-dialog.component';
+import { InvoiceComparisonComponent } from './invoice-comparison.component';
 
 @Component({
   selector: 'app-api-logs',
@@ -24,7 +28,11 @@ import { DeleteConfirmationDialogComponent, DeleteConfirmationData } from './del
     MatFormFieldModule,
     MatIconModule,
     MatTooltipModule,
-    InvoiceDetailsComponent
+    MatCheckboxModule,
+    MatCardModule,
+    MatTabsModule,
+    InvoiceDetailsComponent,
+    InvoiceComparisonComponent
   ],
   styleUrls: ['./api-logs.component.scss'],
   templateUrl: './api-logs.component.html'
@@ -36,6 +44,12 @@ export class ApiLogsComponent implements OnInit {
   selectedLog: ApiResponseLogDetail | null = null;
   showDetails = false;
   limit = 10;
+  
+  // Comparison functionality
+  selectedLogsForComparison: string[] = [];
+  showComparison = false;
+  comparisonLogs: ApiResponseLogDetail[] = [];
+  isLoadingComparison = false;
 
   constructor(
     private apiLogService: ApiLogService,
@@ -97,7 +111,8 @@ export class ApiLogsComponent implements OnInit {
     return this.apiLogService.getLogImage(logId);
   }
 
-  formatTimestamp(timestamp: string): string {
+  formatTimestamp(timestamp: string | undefined): string {
+    if (!timestamp) return 'N/A';
     return new Date(timestamp).toLocaleString();
   }
 
@@ -108,7 +123,8 @@ export class ApiLogsComponent implements OnInit {
     return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   }
 
-  formatDuration(ms: number): string {
+  formatDuration(ms: number | undefined): string {
+    if (ms === undefined || ms === null) return 'N/A';
     if (ms < 1000) return `${ms}ms`;
     return `${(ms / 1000).toFixed(2)}s`;
   }
@@ -187,5 +203,68 @@ export class ApiLogsComponent implements OnInit {
         this.toastr.error('Failed to delete all logs', 'Error');
       }
     });
+  }
+
+  // Comparison functionality methods
+  toggleLogSelection(logId: string) {
+    const index = this.selectedLogsForComparison.indexOf(logId);
+    
+    if (index > -1) {
+      // Remove from selection
+      this.selectedLogsForComparison.splice(index, 1);
+    } else {
+      // Add to selection (max 2 logs)
+      if (this.selectedLogsForComparison.length < 2) {
+        this.selectedLogsForComparison.push(logId);
+      } else {
+        this.toastr.warning('You can only compare 2 logs at a time', 'Selection Limit');
+        return;
+      }
+    }
+
+    // If we have exactly 2 logs selected, automatically start comparison
+    if (this.selectedLogsForComparison.length === 2) {
+      this.startComparison();
+    } else {
+      this.closeComparison();
+    }
+  }
+
+  isLogSelected(logId: string): boolean {
+    return this.selectedLogsForComparison.includes(logId);
+  }
+
+  startComparison() {
+    if (this.selectedLogsForComparison.length !== 2) {
+      this.toastr.error('Please select exactly 2 logs to compare', 'Comparison Error');
+      return;
+    }
+
+    this.isLoadingComparison = true;
+    this.comparisonLogs = [];
+
+    // Load detailed data for both selected logs
+    const log1Promise = this.apiLogService.getLogById(this.selectedLogsForComparison[0]).toPromise();
+    const log2Promise = this.apiLogService.getLogById(this.selectedLogsForComparison[1]).toPromise();
+
+    Promise.all([log1Promise, log2Promise]).then((results) => {
+      this.comparisonLogs = results.filter(log => log !== undefined) as ApiResponseLogDetail[];
+      this.showComparison = true;
+      this.isLoadingComparison = false;
+    }).catch((error) => {
+      console.error('Error loading comparison logs:', error);
+      this.toastr.error('Failed to load logs for comparison', 'Error');
+      this.isLoadingComparison = false;
+    });
+  }
+
+  closeComparison() {
+    this.showComparison = false;
+    this.comparisonLogs = [];
+  }
+
+  clearSelection() {
+    this.selectedLogsForComparison = [];
+    this.closeComparison();
   }
 }

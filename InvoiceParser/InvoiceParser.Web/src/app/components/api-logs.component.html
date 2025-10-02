@@ -33,13 +33,36 @@
         <mat-icon>delete_sweep</mat-icon>
         Clear All History
       </button>
+      
+      <button mat-raised-button color="accent" (click)="clearSelection()" 
+              [disabled]="selectedLogsForComparison.length === 0"
+              matTooltip="Clear comparison selection">
+        <mat-icon>clear</mat-icon>
+        Clear Selection
+      </button>
     </div>
+  </div>
+
+  <!-- Comparison Selection Info -->
+  <div class="comparison-info" *ngIf="selectedLogsForComparison.length > 0">
+    <mat-card>
+      <mat-card-content>
+        <div class="selection-status">
+          <mat-icon>compare</mat-icon>
+          <span>{{ selectedLogsForComparison.length }} of 2 logs selected for comparison</span>
+          <span *ngIf="selectedLogsForComparison.length === 1" class="selection-hint">
+            Select one more log to start comparison
+          </span>
+        </div>
+      </mat-card-content>
+    </mat-card>
   </div>
 
   <div class="logs-table-container" *ngIf="!isLoading && logs.length > 0">
     <table class="logs-table">
       <thead>
         <tr>
+          <th>Select</th>
           <th>Timestamp</th>
           <th>Provider</th>
           <th>Model</th>
@@ -51,7 +74,15 @@
         </tr>
       </thead>
       <tbody>
-        <tr *ngFor="let log of logs" [class.error-row]="!log.success">
+        <tr *ngFor="let log of logs" [class.error-row]="!log.success" [class.selected-for-comparison]="isLogSelected(log.id)">
+          <td class="select-column">
+            <mat-checkbox 
+              [checked]="isLogSelected(log.id)"
+              [disabled]="!isLogSelected(log.id) && selectedLogsForComparison.length >= 2"
+              (change)="toggleLogSelection(log.id)"
+              matTooltip="Select for comparison">
+            </mat-checkbox>
+          </td>
           <td class="timestamp">{{ formatTimestamp(log.timestamp) }}</td>
           <td class="provider">
             <span class="provider-badge" [class]="log.apiProvider">
@@ -86,6 +117,34 @@
         </tr>
       </tbody>
     </table>
+  </div>
+
+  <!-- Comparison View -->
+  <div class="comparison-container" *ngIf="showComparison && !isLoadingComparison">
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>
+          <mat-icon>compare</mat-icon>
+          Log Comparison
+        </mat-card-title>
+        <button mat-icon-button (click)="closeComparison()" class="close-comparison">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-card-header>
+      
+      <mat-card-content>
+        <!-- Use the new comparison component -->
+        <app-invoice-comparison 
+          [log1]="comparisonLogs[0]" 
+          [log2]="comparisonLogs[1]">
+        </app-invoice-comparison>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Loading Comparison -->
+  <div class="loading" *ngIf="isLoadingComparison">
+    <p>Loading comparison data...</p>
   </div>
 
   <div class="loading" *ngIf="isLoading">
