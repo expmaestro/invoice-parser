@@ -82,18 +82,19 @@
     
     &:nth-child(9) { // Actions column
       text-align: center;
-      width: 160px;
+      width: 180px;
     }
   }
 
   td {
     padding: 10px 8px;
-    border-bottom: 1px solid #dee2e6;
     vertical-align: middle;
   }
 
   tr {
     transition: background-color 0.2s;
+    border-bottom: 1px solid #dee2e6;
+
 
     &:hover {
       background: #f8f9fa;
@@ -187,7 +188,7 @@
     gap: 4px;
     justify-content: center;
     align-items: center;
-    width: 160px;
+    width: 180px;
     
     button {
       display: flex;
