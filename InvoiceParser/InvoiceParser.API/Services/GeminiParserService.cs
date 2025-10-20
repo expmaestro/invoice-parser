@@ -411,5 +411,82 @@ namespace InvoiceParser.Services
             [JsonPropertyName("tokenCount")]
             public int TokenCount { get; set; }
         }
+
+        public async Task<string> GenerateTextAsync(string prompt)
+        {
+            var startTime = DateTime.UtcNow;
+            var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+            var requestId = Guid.NewGuid().ToString();
+            string? requestPayload = null;
+            string? jsonResponse = null;
+            
+            try
+            {
+                var requestBody = new
+                {
+                    contents = new[]
+                    {
+                        new
+                        {
+                            parts = new[]
+                            {
+                                new
+                                {
+                                    text = prompt
+                                }
+                            }
+                        }
+                    },
+                    generationConfig = new
+                    {
+                        temperature = 0.1,
+                        maxOutputTokens = 1000
+                    }
+                };
+
+                requestPayload = JsonSerializer.Serialize(requestBody, new JsonSerializerOptions { WriteIndented = true });
+
+                var content = new StringContent(requestPayload, Encoding.UTF8, "application/json");
+                //  var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={_apiKey}";
+                var url = $"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={_apiKey}";
+                var response = await _httpClient.PostAsync(url, content);
+                jsonResponse = await response.Content.ReadAsStringAsync();
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("Gemini API request failed: {StatusCode}, Response: {Response}", response.StatusCode, jsonResponse);
+                    throw new Exception($"Gemini API request failed: {response.StatusCode}");
+                }
+
+                var geminiResponse = JsonSerializer.Deserialize<GeminiResponse>(jsonResponse);
+                
+                if (geminiResponse?.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text is string text)
+                {
+                    return text;
+                }
+
+                throw new Exception("No valid response from Gemini API");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in GenerateTextAsync");
+                throw;
+            }
+            finally
+            {
+                stopwatch.Stop();
+                await _apiResponseLogService.SaveApiResponseAsync(new Models.ApiResponseLog
+                {
+                    RequestId = requestId,
+                    Timestamp = startTime,
+                    ProcessingTimeMs = stopwatch.ElapsedMilliseconds,
+                    RequestPayload = requestPayload,
+                    ResponseContent = jsonResponse ?? "",
+                    ApiProvider = "Gemini",
+                    ModelVersion = "gemini-1.5-flash",
+                    Success = jsonResponse != null
+                });
+            }
+        }
     }
 }

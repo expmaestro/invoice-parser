@@ -32,10 +32,13 @@ builder.Services.AddHttpClient("OpenAI", client =>
     client.BaseAddress = new Uri("https://api.openai.com/");
 });
 
+builder.Services.AddHttpClient("WeatherRoute");
+
 builder.Services.AddScoped<IInvoiceParserService, InvoiceParserService>();
 builder.Services.AddScoped<IGeminiParserService, GeminiParserService>();
 builder.Services.AddScoped<IOpenAIParserService, OpenAIParserService>();
 builder.Services.AddScoped<IApiResponseLogService, ApiResponseLogService>();
+builder.Services.AddScoped<IWeatherRouteService, WeatherRouteService>();
 
 var app = builder.Build();
 

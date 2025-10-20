@@ -1,0 +1,86 @@
+<div class="weather-route-container">
+  <mat-card>
+    <mat-card-header>
+      <mat-card-title>Weather Route Forecast</mat-card-title>
+      <mat-card-subtitle>Get weather hazards along your travel route</mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content>
+      <form (ngSubmit)="getForecast()" #routeForm="ngForm">
+        <div class="input-row">
+          <mat-form-field appearance="outline" class="input-field">
+            <mat-label>Origin</mat-label>
+            <input matInput [(ngModel)]="origin" name="origin" required 
+                   placeholder="e.g., Boston, MA" />
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" class="input-field">
+            <mat-label>Destination</mat-label>
+            <input matInput [(ngModel)]="destination" name="destination" required 
+                   placeholder="e.g., Austin, TX" />
+          </mat-form-field>
+          
+          <mat-form-field appearance="outline" class="input-field">
+            <mat-label>Start Date (Optional)</mat-label>
+            <input matInput type="date" [(ngModel)]="startDate" name="startDate" 
+                   [min]="today" />
+            <mat-hint>Leave empty for current weather</mat-hint>
+          </mat-form-field>
+        </div>
+        
+        <div class="button-row">
+          <button mat-raised-button color="primary" type="submit" 
+                  [disabled]="loading || !routeForm.valid">
+            <mat-spinner *ngIf="loading" diameter="20" style="margin-right: 8px;"></mat-spinner>
+            {{ loading ? 'Getting Forecast...' : 'Get Forecast' }}
+          </button>
+        </div>
+      </form>
+
+      <div *ngIf="summary" class="summary-section">
+        <mat-card>
+          <mat-card-header>
+            <mat-card-title>
+              <mat-icon>warning</mat-icon>
+              Weather Summary
+            </mat-card-title>
+          </mat-card-header>
+          <mat-card-content>
+            <p>{{ summary }}</p>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <div *ngIf="route" class="route-info">
+        <div class="route-details">
+          <span><strong>Distance:</strong> {{ route.distance }}</span>
+          <span><strong>Duration:</strong> {{ route.duration }}</span>
+        </div>
+      </div>
+
+      <div id="map" class="map-container"></div>
+
+      <div *ngIf="weatherPoints.length > 0" class="weather-points">
+        <h3>Weather Along Route</h3>
+        <div class="weather-grid">
+          <mat-card *ngFor="let point of weatherPoints" class="weather-point-card">
+            <mat-card-content>
+              <div class="weather-point-header">
+                <img [src]="'https://openweathermap.org/img/w/' + point.icon + '.png'" 
+                     [alt]="point.description" />
+                <div>
+                  <h4>{{ point.locationName }}</h4>
+                  <p class="temperature">{{ point.temperature }}°C</p>
+                </div>
+              </div>
+              <p class="description">{{ point.description }}</p>
+              <p *ngIf="point.precipitation > 0" class="precipitation">
+                Precipitation: {{ point.precipitation }}mm
+              </p>
+            </mat-card-content>
+          </mat-card>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

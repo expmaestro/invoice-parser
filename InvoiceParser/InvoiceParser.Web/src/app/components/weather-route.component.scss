@@ -1,0 +1,140 @@
+.weather-route-container {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.input-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+}
+
+.input-field {
+  flex: 1;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+.summary-section {
+  margin: 2rem 0;
+  
+  mat-card {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+  }
+  
+  mat-card-title {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #856404;
+    
+    mat-icon {
+      color: #ff9800;
+    }
+  }
+}
+
+.route-info {
+  margin: 1rem 0;
+}
+
+.route-details {
+  display: flex;
+  gap: 2rem;
+  padding: 1rem;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+.map-container {
+  height: 400px;
+  width: 100%;
+  margin: 2rem 0;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.weather-points {
+  margin-top: 2rem;
+  
+  h3 {
+    margin-bottom: 1rem;
+    color: #333;
+  }
+}
+
+.weather-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.weather-point-card {
+  .weather-point-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+    
+    img {
+      width: 50px;
+      height: 50px;
+    }
+    
+    h4 {
+      margin: 0 0 0.25rem 0;
+      font-size: 1rem;
+      color: #333;
+    }
+    
+    .temperature {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1976d2;
+    }
+  }
+  
+  .description {
+    margin: 0.5rem 0;
+    color: #666;
+    text-transform: capitalize;
+  }
+  
+  .precipitation {
+    margin: 0.5rem 0 0 0;
+    font-size: 0.9rem;
+    color: #2196f3;
+    font-weight: 500;
+  }
+}
+
+mat-spinner {
+  display: inline-block;
+}
+
+// Loading state
+.loading {
+  .map-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f5f5f5;
+    color: #666;
+  }
+}

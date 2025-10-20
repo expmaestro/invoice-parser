@@ -20,6 +20,7 @@
     "@angular/platform-browser": "^19.0.0",
     "@angular/platform-browser-dynamic": "^19.0.0",
     "@angular/router": "^19.0.0",
+    "@googlemaps/js-api-loader": "^2.0.1",
     "diff": "^8.0.2",
     "diff2html": "^3.4.52",
     "ngx-toastr": "^19.1.0",
